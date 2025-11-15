@@ -92,7 +92,10 @@ patches.push(
   after("generate", RowManager.prototype, ([data], row) => {
     if (data.rowType !== 1) return;
 
-    if (data.message.__vml_deleted) {
+    const message = data.message;
+
+
+    if (message.__vml_deleted) {
       row.message.edited = "deleted";
       row.backgroundHighlight ??= {};
       row.backgroundHighlight.backgroundColor =
@@ -102,7 +105,7 @@ patches.push(
     }
 
 
-    if (data.message.__vml_edited) {
+    if (message.__vml_edited) {
       row.message.edited = "edited";
       row.backgroundHighlight ??= {};
       row.backgroundHighlight.backgroundColor =
@@ -112,29 +115,14 @@ patches.push(
     }
 
 
-    if (data.message.__vml_edits?.length > 0) {
-      const edits = data.message.__vml_edits.map((e, index) =>
-        React.createElement(
-          "Text",
-          {
-            key: index,
-            style: {
-              color: "#eab308",
-              fontSize: 12,
-              marginLeft: 12,
-              marginBottom: 2,
-            },
-          },
-          `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`
-        )
-      );
+    if (message.__vml_edits?.length > 0) {
+      const editTexts = message.__vml_edits.map((e, i) => {
+        const time = new Date(e.timestamp).toLocaleString();
+        return `${time}: ${e.oldContent} → ${e.newContent}`;
+      });
 
-      row.renderHeader = () =>
-        React.createElement(
-          React.Fragment,
-          null,
-          edits
-        );
+
+      row.message.content = editTexts.join("\n") + "\n" + row.message.content;
     }
   })
 );
@@ -175,8 +163,6 @@ patches.push(
     record.__vml_edits = props.__vml_edits ?? [];
   })
 );
-
-
 export const onUnload = () => {
   patches.forEach((unpatch) => unpatch());
 
