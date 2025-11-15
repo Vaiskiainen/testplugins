@@ -90,21 +90,9 @@ patches.push(
     }
 
     if (message.__vml_edits?.length > 0) {
-      const edits = message.__vml_edits.map((e, i) =>
-        React.createElement(
-          "Text",
-          {
-            key: i,
-            style: {
-              fontSize: 10,
-              color: "#888888",
-              marginLeft: 8,
-              marginBottom: 2,
-            },
-          },
-          `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`
-        )
-      );
+      const historyText = message.__vml_edits
+        .map((e) => `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`)
+        .join("\n");
 
       const OriginalRender = row.render;
       row.render = function (...args: any) {
@@ -112,9 +100,16 @@ patches.push(
           React.Fragment,
           null,
           React.createElement(
-            ReactNative.View,
-            { style: { marginBottom: 2 } },
-            edits
+            "Text",
+            {
+              style: {
+                fontSize: 10,
+                color: "#888888",
+                marginLeft: 8,
+                marginBottom: 2,
+              },
+            },
+            historyText
           ),
           OriginalRender.apply(this, args)
         );
