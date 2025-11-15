@@ -1,1 +1,1 @@
-{"name":"Vaiskiainen Plugin","description":"My personal plugin","authors":[{"name":"Vaiskiainen","id":"1205851726586970125"}],"main":"index.js","vendetta":{"icon":"ic_badge_staff"},"hash":"69b1394cdc1416c6ea015f74d30900b24db3b6a5e35c910614f7d91a8ce6b34a"}
+{"name":"Vaiskiainen","description":"My personal plugin","authors":[{"name":"Vaiskiainen","id":"1205851726586970125"}],"main":"index.js","vendetta":{"icon":"ic_badge_staff"},"hash":"265be6a71f5e60c3fb3e267e079eca22f40e0fe4f0fc0fb425c69ff6283c0497"}
