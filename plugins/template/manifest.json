@@ -1,6 +1,6 @@
 {
-    "name": "Vaiskiainen",
-    "description": "My personal plugin",
+    "name": "Message logger",
+    "description": "My personal message logger plugin",
     "authors": [
         {
             "name": "Vaiskiainen",

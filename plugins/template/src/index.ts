@@ -58,6 +58,7 @@ patches.push(
   })
 );
 
+
 patches.push(
   before("dispatch", FluxDispatcher, ([event]) => {
     if (event.type !== "MESSAGE_UPDATE") return;
@@ -91,7 +92,6 @@ patches.push(
   after("generate", RowManager.prototype, ([data], row) => {
     if (data.rowType !== 1) return;
 
-    /* Deleted message styling */
     if (data.message.__vml_deleted) {
       row.message.edited = "deleted";
       row.backgroundHighlight ??= {};
@@ -101,7 +101,7 @@ patches.push(
         ReactNative.processColor("#da373cff");
     }
 
-    /* Edited message styling */
+
     if (data.message.__vml_edited) {
       row.message.edited = "edited";
       row.backgroundHighlight ??= {};
@@ -111,25 +111,28 @@ patches.push(
         ReactNative.processColor("#eab308ff");
     }
 
-    if (data.message.__vml_edits?.length > 0) {
-      const edits = data.message.__vml_edits
-        .map((e) => {
-          const time = new Date(e.timestamp).toLocaleString();
-          return `${time}: ${e.oldContent} → ${e.newContent}`;
-        })
-        .join("\n");
 
-      row.renderHeader = () =>
+    if (data.message.__vml_edits?.length > 0) {
+      const edits = data.message.__vml_edits.map((e, index) =>
         React.createElement(
           "Text",
           {
+            key: index,
             style: {
               color: "#eab308",
               fontSize: 12,
               marginLeft: 12,
-              marginBottom: 4,
+              marginBottom: 2,
             },
           },
+          `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`
+        )
+      );
+
+      row.renderHeader = () =>
+        React.createElement(
+          React.Fragment,
+          null,
           edits
         );
     }
@@ -190,4 +193,3 @@ export const onUnload = () => {
     }
   }
 };
-
