@@ -1,1 +1,1 @@
-{"name":"Vaiskiainen","description":"My personal plugin","authors":[{"name":"Vaiskiainen","id":"1205851726586970125"}],"main":"index.js","vendetta":{"icon":"ic_badge_staff"},"hash":"a478c8e7fbc749fa0575a97ff9f33d5ea8c5a044d5c690a3596d186dfff4f62a"}
+{"name":"Message logger","description":"My personal message logger plugin","authors":[{"name":"Vaiskiainen","id":"1205851726586970125"}],"main":"index.js","vendetta":{"icon":"ic_badge_staff"},"hash":"edec437c9674b1ac648e14bfd3ceee8e3f6ccd52dfeecaf44ff51a31f17d7bc0"}
