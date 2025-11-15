@@ -1,10 +1,10 @@
 {
-    "name": "Template Plugin",
-    "description": "A plugin for use as a template.",
+    "name": "Vaiskiainen Plugin",
+    "description": "My personal plugin",
     "authors": [
         {
-            "name": "You!",
-            "id": "YOUR_ID_HERE"
+            "name": "Vaiskiainen",
+            "id": "1205851726586970125"
         }
     ],
     "main": "src/index.ts",
