@@ -44,11 +44,7 @@ patches.push(
         },
       ];
     }
-  })
-);
 
-patches.push(
-  before("dispatch", FluxDispatcher, ([event]) => {
     if (event.type !== "MESSAGE_UPDATE") return;
     const msg = event.message;
     const channel = ChannelMessages.get(msg?.channel_id);
@@ -74,42 +70,44 @@ patches.push(
   after("generate", RowManager.prototype, ([data], row) => {
     if (data.rowType !== 1) return;
     const message = data.message;
-
     if (message.__vml_deleted) {
       row.message.edited = "deleted";
       row.backgroundHighlight ??= {};
       row.backgroundHighlight.backgroundColor = ReactNative.processColor("#da373c22");
       row.backgroundHighlight.gutterColor = ReactNative.processColor("#da373cff");
     }
-
     if (message.__vml_edited) {
       row.message.edited = "edited";
       row.backgroundHighlight ??= {};
       row.backgroundHighlight.backgroundColor = ReactNative.processColor("#eab30822");
       row.backgroundHighlight.gutterColor = ReactNative.processColor("#eab308ff");
     }
+  })
+);
 
-    if (message.__vml_edits?.length > 0) {
-      const historyText = message.__vml_edits
-        .map((e) => `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`)
-        .join("\n");
+const MessageContent = findByName("MessageContent");
 
-      row.children ??= [];
-      row.children.unshift(
+patches.push(
+  after("default", MessageContent, ([props], ret) => {
+    const msg = props.message;
+    if (!msg || !msg.__vml_edits?.length) return;
+
+    const historyText = msg.__vml_edits
+      .map((e) => `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`)
+      .join("\n");
+
+    if (React.isValidElement(ret)) {
+      ret.props.children = [
         React.createElement(
           "Text",
           {
             key: "editHistory",
-            style: {
-              fontSize: 10,
-              color: "#888888",
-              marginLeft: 8,
-              marginBottom: 2,
-            },
+            style: { fontSize: 10, color: "#888888", marginBottom: 2 },
           },
           historyText
-        )
-      );
+        ),
+        ret.props.children,
+      ];
     }
   })
 );
@@ -141,15 +139,4 @@ patches.push(
 
 export const onUnload = () => {
   patches.forEach((unpatch) => unpatch());
-  for (const channelId in ChannelMessages._channelMessages) {
-    for (const message of ChannelMessages._channelMessages[channelId]._array) {
-      if (message.__vml_deleted)
-        FluxDispatcher.dispatch({
-          type: "MESSAGE_DELETE",
-          id: message.id,
-          channelId: message.channel_id,
-          __vml_cleanup: true,
-        });
-    }
-  }
 };
