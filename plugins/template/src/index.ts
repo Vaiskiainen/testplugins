@@ -94,26 +94,22 @@ patches.push(
         .map((e) => `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`)
         .join("\n");
 
-      const OriginalRender = row.render;
-      row.render = function (...args: any) {
-        return React.createElement(
-          React.Fragment,
-          null,
-          React.createElement(
-            "Text",
-            {
-              style: {
-                fontSize: 10,
-                color: "#888888",
-                marginLeft: 8,
-                marginBottom: 2,
-              },
+      row.children ??= [];
+      row.children.unshift(
+        React.createElement(
+          "Text",
+          {
+            key: "editHistory",
+            style: {
+              fontSize: 10,
+              color: "#888888",
+              marginLeft: 8,
+              marginBottom: 2,
             },
-            historyText
-          ),
-          OriginalRender.apply(this, args)
-        );
-      };
+          },
+          historyText
+        )
+      );
     }
   })
 );
