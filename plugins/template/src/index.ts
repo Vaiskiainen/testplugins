@@ -1,6 +1,7 @@
 import { findByName, findByProps } from "@vendetta/metro";
 import { FluxDispatcher, ReactNative } from "@vendetta/metro/common";
 import { after, before, instead } from "@vendetta/patcher";
+import React from "react";
 
 const patches: any[] = [];
 
@@ -21,9 +22,7 @@ patches.push(
       if (message.author?.id == "1") return event;
       if (message.state == "SEND_FAILED") return event;
       storage.nopk &&
-        fetch(
-          `https://api.pluralkit.me/v2/messages/${encodeURIComponent(message.id)}`
-        )
+        fetch(`https://api.pluralkit.me/v2/messages/${encodeURIComponent(message.id)}`)
           .then((res) => res.json())
           .then((data) => {
             if (message.id === data.original && !data.member?.keep_proxy) {
@@ -75,59 +74,70 @@ patches.push(
   after("generate", RowManager.prototype, ([data], row) => {
     if (data.rowType !== 1) return;
     const message = data.message;
+
     if (message.__vml_deleted) {
       row.message.edited = "deleted";
       row.backgroundHighlight ??= {};
-      row.backgroundHighlight.backgroundColor =
-        ReactNative.processColor("#da373c22");
-      row.backgroundHighlight.gutterColor =
-        ReactNative.processColor("#da373cff");
+      row.backgroundHighlight.backgroundColor = ReactNative.processColor("#da373c22");
+      row.backgroundHighlight.gutterColor = ReactNative.processColor("#da373cff");
     }
+
     if (message.__vml_edited) {
       row.message.edited = "edited";
       row.backgroundHighlight ??= {};
-      row.backgroundHighlight.backgroundColor =
-        ReactNative.processColor("#eab30822");
-      row.backgroundHighlight.gutterColor =
-        ReactNative.processColor("#eab308ff");
+      row.backgroundHighlight.backgroundColor = ReactNative.processColor("#eab30822");
+      row.backgroundHighlight.gutterColor = ReactNative.processColor("#eab308ff");
     }
+
     if (message.__vml_edits?.length > 0) {
-      const editTexts = message.__vml_edits.map((e) => {
-        const time = new Date(e.timestamp).toLocaleString();
-        return `[Edited ${time}]: ${e.oldContent} → ${e.newContent}`;
-      });
-      const originalContent = row.message.content ?? "";
-      row.message.content = editTexts.join("\n") + "\n" + originalContent;
+      const edits = message.__vml_edits.map((e, i) =>
+        React.createElement(
+          "Text",
+          {
+            key: i,
+            style: {
+              fontSize: 10,
+              color: "#888888",
+              marginLeft: 8,
+              marginBottom: 2,
+            },
+          },
+          `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`
+        )
+      );
+
+      const OriginalRender = row.render;
+      row.render = function (...args: any) {
+        return React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(
+            ReactNative.View,
+            { style: { marginBottom: 2 } },
+            edits
+          ),
+          OriginalRender.apply(this, args)
+        );
+      };
     }
   })
 );
 
 patches.push(
-  instead(
-    "updateMessageRecord",
-    MessageRecordUtils,
-    function ([oldRecord, newRecord], orig) {
-      if (newRecord.__vml_deleted || newRecord.__vml_edited) {
-        return MessageRecordUtils.createMessageRecord(
-          newRecord,
-          oldRecord.reactions
-        );
-      }
-      return orig.apply(this, [oldRecord, newRecord]);
+  instead("updateMessageRecord", MessageRecordUtils, function ([oldRecord, newRecord], orig) {
+    if (newRecord.__vml_deleted || newRecord.__vml_edited) {
+      return MessageRecordUtils.createMessageRecord(newRecord, oldRecord.reactions);
     }
-  )
+    return orig.apply(this, [oldRecord, newRecord]);
+  })
 );
 
 patches.push(
-  after(
-    "createMessageRecord",
-    MessageRecordUtils,
-    function ([message], record) {
-      record.__vml_deleted = message.__vml_deleted;
-      record.__vml_edited = message.__vml_edited;
-      record.__vml_edits = message.__vml_edits ?? [];
-    }
-  )
+  after("createMessageRecord", MessageRecordUtils, function ([message], record) {
+    record.__vml_deleted = message.__vml_deleted;
+    record.__vml_edited = message.__vml_edited;
+    record.__vml_edits = message.__vml_edits ?? [];
+  })
 );
 
 patches.push(
