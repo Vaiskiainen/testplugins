@@ -10,30 +10,31 @@ const MessageRecordUtils = findByProps("updateMessageRecord", "createMessageReco
 const MessageRecord = findByName("MessageRecord", false);
 const RowManager = findByName("RowManager");
 
-import { storage } from "@vendetta/plugin";
-
 patches.push(
   before("dispatch", FluxDispatcher, ([event]) => {
-    if (event.type === "MESSAGE_DELETE") {
+    if (event.type === "MESSAGE_UPDATE") {
+      const msg = event.message;
+      const channel = ChannelMessages.get(msg?.channel_id);
+      if (!channel) return;
+      const old = channel.get(msg.id);
+      if (!old) return;
+      if (msg.content !== old.content) {
+        msg.__vml_edited = true;
+        msg.__vml_edits = [
+          ...(old.__vml_edits ?? []),
+          {
+            timestamp: Date.now(),
+            oldContent: old.content,
+            newContent: msg.content,
+          },
+        ];
+      }
+    } else if (event.type === "MESSAGE_DELETE") {
       if (event.__vml_cleanup) return event;
       const channel = ChannelMessages.get(event.channelId);
       const message = channel?.get(event.id);
       if (!message) return event;
-      if (message.author?.id == "1") return event;
-      if (message.state == "SEND_FAILED") return event;
-      storage.nopk &&
-        fetch(`https://api.pluralkit.me/v2/messages/${encodeURIComponent(message.id)}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (message.id === data.original && !data.member?.keep_proxy) {
-              FluxDispatcher.dispatch({
-                type: "MESSAGE_DELETE",
-                id: message.id,
-                channelId: message.channel_id,
-                __vml_cleanup: true,
-              });
-            }
-          });
+      msg.__vml_deleted = true;
       return [
         {
           message: {
@@ -45,23 +46,6 @@ patches.push(
       ];
     }
 
-    if (event.type !== "MESSAGE_UPDATE") return;
-    const msg = event.message;
-    const channel = ChannelMessages.get(msg?.channel_id);
-    if (!channel) return;
-    const old = channel.get(msg.id);
-    if (!old) return;
-    if (msg.content !== old.content) {
-      msg.__vml_edited = true;
-      msg.__vml_edits = [
-        ...(old.__vml_edits ?? []),
-        {
-          timestamp: Date.now(),
-          oldContent: old.content,
-          newContent: msg.content,
-        },
-      ];
-    }
     return event;
   })
 );
@@ -85,35 +69,62 @@ patches.push(
   })
 );
 
-const MessageContent = findByName("MessageContent");
+const Text = ReactNative.Text;
+const View = ReactNative.View;
 
 patches.push(
-  after("default", MessageContent, ([props], ret) => {
+  after("default", findByName("MessageContent") ?? { default: null }, ([props], ret) => {
     const msg = props.message;
     if (!msg || !msg.__vml_edits?.length) return;
 
-    const historyText = msg.__vml_edits
-      .map((e) => `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`)
+    const history = msg.__vml_edits
+      .map(
+        (e) =>
+          `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`
+      )
       .join("\n");
 
+    function findTextNode(node: any): boolean {
+      return node && node.type === Text;
+    }
+
+    function injectHistory(children: any): any {
+      if (!children) return children;
+      if (Array.isArray(children)) {
+        const idx = children.findIndex(findTextNode);
+        if (idx !== -1) {
+          const newNode = React.createElement(
+            Text,
+            {
+              style: {
+                fontSize: 10,
+                color: "#888888",
+                marginBottom: 4,
+              },
+            },
+            history
+          );
+          children.splice(idx, 0, newNode);
+          return children;
+        }
+        return children.map(injectHistory);
+      } else if (typeof children === "object" && children.props) {
+        return React.cloneElement(children, {
+          children: injectHistory(children.props.children),
+        });
+      } else {
+        return children;
+      }
+    }
+
     if (React.isValidElement(ret)) {
-      ret.props.children = [
-        React.createElement(
-          "Text",
-          {
-            key: "editHistory",
-            style: { fontSize: 10, color: "#888888", marginBottom: 2 },
-          },
-          historyText
-        ),
-        ret.props.children,
-      ];
+      ret.props.children = injectHistory(ret.props.children);
     }
   })
 );
 
 patches.push(
-  instead("updateMessageRecord", MessageRecordUtils, function ([oldRecord, newRecord], orig) {
+  instead("updateMessageRecord", MessageRecordUtils, ([oldRecord, newRecord], orig) => {
     if (newRecord.__vml_deleted || newRecord.__vml_edited) {
       return MessageRecordUtils.createMessageRecord(newRecord, oldRecord.reactions);
     }
@@ -122,7 +133,7 @@ patches.push(
 );
 
 patches.push(
-  after("createMessageRecord", MessageRecordUtils, function ([message], record) {
+  after("createMessageRecord", MessageRecordUtils, ([message], record) => {
     record.__vml_deleted = message.__vml_deleted;
     record.__vml_edited = message.__vml_edited;
     record.__vml_edits = message.__vml_edits ?? [];
