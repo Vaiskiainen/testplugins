@@ -55,12 +55,11 @@ patches.push(before("dispatch", FluxDispatcher, ([event]) => {
   const old = channel.get(msg.id);
   if (!old) return;
 
-  // Only react when content changes
+
   if (msg.content !== old.content) {
 
     msg.__vml_edited = true;
 
-    // --- NEW: edit history array ---
     msg.__vml_edits = [
       ...(old.__vml_edits ?? []),
       {
@@ -92,6 +91,7 @@ patches.push(after("generate", RowManager.prototype, ([data], row) => {
     row.backgroundHighlight.gutterColor = ReactNative.processColor("#eab308ff");
   }
 }));
+
 
 
 patches.push(instead("updateMessageRecord", MessageRecordUtils, function ([oldRecord, newRecord], orig) {
@@ -130,4 +130,4 @@ export const onUnload = () => {
   }
 };
 
-export { default as settings } from "./settings";
+
