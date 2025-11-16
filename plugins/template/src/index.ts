@@ -3,19 +3,22 @@ import { FluxDispatcher, ReactNative } from "@vendetta/metro/common";
 import { after, before } from "@vendetta/patcher";
 import React from "react";
 
-const patches: any[] = [];
+const patches = [];
 
 const ChannelMessages = findByProps("getChannelMessages", "getMessage");
 const RowManager = findByName("RowManager");
 const MessageContentMod = findByName("MessageContent");
 
+
 patches.push(
-  before("dispatch", FluxDispatcher, ([event]) => {
+  before("dispatch", FluxDispatcher, (args) => {
+    const event = args[0];
 
     if (event.type === "MESSAGE_UPDATE") {
       const msg = event.message;
       const channel = ChannelMessages.getChannelMessages(msg.channel_id);
       if (!channel) return;
+
       const old = channel.getMessage(msg.id);
       if (!old) return;
 
@@ -26,55 +29,55 @@ patches.push(
           {
             timestamp: Date.now(),
             oldContent: old.content,
-            newContent: msg.content
-          }
+            newContent: msg.content,
+          },
         ];
       }
-      return event;
+      return;
     }
 
 
     if (event.type === "MESSAGE_DELETE") {
-      if (event.__vml_cleanup) return event;
+      if (event.__vml_cleanup) return;
 
       const channel = ChannelMessages.getChannelMessages(event.channelId);
       const message = channel?.getMessage(event.id);
-      if (!message) return event;
+      if (!message) return;
 
-
+      // Convert delete → update
       return [
         {
           type: "MESSAGE_UPDATE",
           channelId: event.channelId,
           message: {
             ...message,
-            __vml_deleted: true
-          }
-        }
+            __vml_deleted: true,
+          },
+        },
       ];
     }
-
-    return event;
   })
 );
 
-
 patches.push(
-  after("generate", RowManager.prototype, ([data], row) => {
-    if (!row?.props?.message) return;
-    const message = row.props.message;
+  after("generate", RowManager.prototype, (args, row) => {
+    const data = args[0];
 
-    if (message.__vml_deleted) {
+    if (!row || !row.props || !row.props.message) return;
+
+    const msg = row.props.message;
+
+    if (msg.__vml_deleted) {
       row.props.backgroundHighlight = {
         backgroundColor: ReactNative.processColor("#da373c22"),
-        gutterColor: ReactNative.processColor("#da373cff")
+        gutterColor: ReactNative.processColor("#da373cff"),
       };
     }
 
-    if (message.__vml_edited) {
+    if (msg.__vml_edited) {
       row.props.backgroundHighlight = {
         backgroundColor: ReactNative.processColor("#eab30822"),
-        gutterColor: ReactNative.processColor("#eab308ff")
+        gutterColor: ReactNative.processColor("#eab308ff"),
       };
     }
   })
@@ -82,39 +85,47 @@ patches.push(
 
 
 patches.push(
-  after("default", MessageContentMod ?? { default: null }, ([props], ret) => {
+  after("default", MessageContentMod ?? { default: null }, (args, ret) => {
+    const props = args[0];
     const msg = props.message;
+
     if (!msg || !msg.__vml_edits?.length) return;
 
     const history = msg.__vml_edits
       .map(
-        e =>
-          `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${e.newContent}`
+        (e) =>
+          `${new Date(e.timestamp).toLocaleString()}: ${e.oldContent} → ${
+            e.newContent
+          }`
       )
       .join("\n");
 
-    const extra = React.createElement(
+    const HistoryNode = React.createElement(
       ReactNative.Text,
       {
         style: {
           fontSize: 10,
           color: "#888",
-          marginBottom: 4
-        }
+          marginBottom: 4,
+        },
       },
       history
     );
 
     if (!React.isValidElement(ret)) return;
 
-    const children = Array.isArray(ret.props.children)
-      ? ret.props.children
-      : [ret.props.children];
+    let childArray;
+
+    if (Array.isArray(ret.props.children)) {
+      childArray = ret.props.children;
+    } else {
+      childArray = [ret.props.children];
+    }
 
     return React.cloneElement(ret, {
-      children: [extra, ...children]
+      children: [HistoryNode, ...childArray],
     });
   })
 );
 
-export const onUnload = () => patches.forEach(p => p());
+export const onUnload = () => patches.forEach((p) => p());
