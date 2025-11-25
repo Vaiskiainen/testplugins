@@ -22,7 +22,7 @@ export default {
             if (!storage.splashURL) return res;
 
             if (targetNames.includes(name)) {
-                // console.log(`CustomSplash: Intercepted asset ${ name } `);
+                // console.log(`CustomSplash: Intercepted asset ${name}`);
                 return { uri: storage.splashURL };
             }
 
@@ -36,4 +36,3 @@ export default {
     },
     settings: Settings,
 }
-
