@@ -10,7 +10,7 @@ function handleMessage(event: any) {
     const content: string = event?.message?.content ?? "";
     if (!content.includes("🗿")) return;
     if (!storage.enabled) return;
-    const url = storage.soundUrl || "https://cdn.jsdelivr.net/gh/discord/emoji/moyai.mp3";
+    const url = storage.soundUrl || "https://www.myinstants.com/media/sounds/vine-boom.mp3";
     try {
         const audio = new Audio(url);
         audio.play();
@@ -24,7 +24,7 @@ export default {
     onLoad: () => {
 
         storage.enabled ??= true;
-        storage.soundUrl ??= "https://cdn.jsdelivr.net/gh/discord/emoji/moyai.mp3";
+        storage.soundUrl ??= "https://www.myinstants.com/media/sounds/vine-boom.mp3";
         unsubscribe = FluxDispatcher.subscribe("MESSAGE_CREATE", handleMessage);
         console.log("MoyaiSound: Loaded and listening for 🗿 emoji");
     },
