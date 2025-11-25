@@ -1,0 +1,1 @@
+{"name":"Custom Splash","description":"Replace the Discord splash screen logo with a custom one.","authors":[{"name":"Vaiskiainen","id":"1205851726586970125"}],"main":"index.js","vendetta":{"icon":"ic_image","settings":"src/Settings.tsx"},"hash":"71d5a44c087368cc360501026d0bddcd6223d7899a367007ecd081000d2d50ef"}
