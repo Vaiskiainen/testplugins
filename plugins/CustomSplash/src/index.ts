@@ -36,55 +36,59 @@ function replaceImage(node: any): boolean {
 
 export default {
     onLoad: () => {
-        let Component;
-        let patchType = "default";
+        const candidates = ["LaunchScreen", "Splash", "SimpleSplash", "Loading", "Launch"];
         let target = null;
+        let patchType = "default";
+        let foundName = "";
 
-        // Method 1: findByProps("LaunchScreen") - Failed previously but keeping it
-        const ModuleProps = findByProps("LaunchScreen");
-        if (ModuleProps) {
-            target = ModuleProps;
-            patchType = "LaunchScreen"; // Assuming named export
-            if (ModuleProps.default) patchType = "default";
-        }
-
-        // Method 2: findByDisplayName("LaunchScreen")
-        if (!target) {
-            const CompDisplay = findByDisplayName("LaunchScreen");
-            if (CompDisplay) {
-                // If it's a class component, we can patch prototype.render
-                if (CompDisplay.prototype && CompDisplay.prototype.render) {
-                    target = CompDisplay.prototype;
+        // Try to find by displayName
+        for (const name of candidates) {
+            const found = findByDisplayName(name);
+            if (found) {
+                if (found.prototype && found.prototype.render) {
+                    target = found.prototype;
                     patchType = "render";
-                } else {
-                    // Functional component. We need the module to patch it.
-                    // But we don't have the module. 
-                    // However, sometimes findByDisplayName returns the module if it's a default export? 
-                    // Unlikely. 
-                    // We can try to patch the function itself if it's mutable? No.
-                    console.log("Found LaunchScreen via displayName but it is functional");
+                    foundName = name;
+                    break;
+                } else if (typeof found === "function") {
+                    // Functional component, usually we need the module to patch it
+                    // But findByDisplayName returns the component itself
+                    // We can't easily patch a standalone function unless we find its module
+                    // But let's see if we can find the module by props?
+                    // For now, let's skip functional components found this way unless we can find their module
+                    console.log(`Found functional component ${name}, but cannot patch directly without module.`);
                 }
             }
         }
 
-        // Method 3: findByDisplayName("Splash")
+        // Try to find by props (module)
         if (!target) {
-            const CompDisplay = findByDisplayName("Splash");
-            if (CompDisplay) {
-                if (CompDisplay.prototype && CompDisplay.prototype.render) {
-                    target = CompDisplay.prototype;
-                    patchType = "render";
+            const moduleCandidates = ["LaunchScreen", "Splash"];
+            for (const name of moduleCandidates) {
+                const mod = findByProps(name);
+                if (mod) {
+                    if (mod[name]) {
+                        target = mod;
+                        patchType = name;
+                        foundName = name;
+                        break;
+                    } else if (mod.default) {
+                        target = mod;
+                        patchType = "default";
+                        foundName = name;
+                        break;
+                    }
                 }
             }
         }
 
         if (!target) {
-            console.error("CustomSplash: LaunchScreen not found");
-            showToast("CustomSplash: LaunchScreen not found", getAssetIDByName("Small"));
+            console.error("CustomSplash: No suitable splash component found");
+            showToast("CustomSplash: Could not find splash component", getAssetIDByName("Small"));
             return;
         }
 
-        showToast(`Patching ${patchType}`, getAssetIDByName("Check"));
+        showToast(`Patching ${foundName} (${patchType})`, getAssetIDByName("Check"));
 
         const patchCallback = (_, res) => {
             if (!storage.splashURL) return res;
