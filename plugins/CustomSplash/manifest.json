@@ -9,7 +9,6 @@
     ],
     "main": "src/index.ts",
     "vendetta": {
-        "icon": "ic_image",
-        "settings": "src/Settings.tsx"
+        "icon": "ic_image"
     }
 }
