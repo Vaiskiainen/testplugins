@@ -1,0 +1,1 @@
+{"name":"MoyaiSound","description":"Plays a sound when the 🗿 (Moyai) emoji appears in chat.","authors":[{"name":"Vaiskiainen","id":"1205851726586970125"}],"main":"index.js","vendetta":{"icon":"ic_money_emoji_24px","settings":"src/Settings.tsx"},"hash":"d713aca5ac481e4e2724813bcede5db8cffe3ec35ea9beb63586707d007046c1"}
