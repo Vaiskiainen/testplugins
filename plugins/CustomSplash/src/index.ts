@@ -28,6 +28,8 @@ function replaceImage(node: any) {
     }
 }
 
+import Settings from "./Settings";
+
 export default {
     onLoad: () => {
         if (!LaunchScreen) {
@@ -50,5 +52,6 @@ export default {
     },
     onUnload: () => {
         unpatch?.();
-    }
+    },
+    settings: Settings,
 }
