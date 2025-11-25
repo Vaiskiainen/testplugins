@@ -9,41 +9,33 @@ let unpatch;
 
 export default {
     onLoad: () => {
-        // Try multiple ways to find the asset module
-        const AssetModule = findByProps("getAssetIDByName") ||
-            findByProps("registerAsset") ||
-            findByProps("getAssetById");
-
+        const AssetModule = findByProps("getAssetById");
         if (!AssetModule) {
-            console.error("CustomSplash: AssetModule not found");
+            console.error("CustomSplash: AssetModule (getAssetById) not found");
             showToast("CustomSplash: AssetModule not found", getAssetIDByName("Small"));
             return;
         }
 
-        // Determine the function name
-        let funcName = "getAssetIDByName";
-        if (!AssetModule[funcName]) {
-            if (AssetModule.getAssetIdByName) {
-                funcName = "getAssetIdByName";
-            } else {
-                showToast(`CustomSplash: ${funcName} not found on module`, getAssetIDByName("Small"));
-                return;
-            }
-        }
-
-        const targetNames = ["logo", "LaunchScreen", "Splash", "SimpleSplash"];
-
-        unpatch = patcher.after(funcName, AssetModule, ([name], res) => {
+        unpatch = patcher.after("getAssetById", AssetModule, ([id], res) => {
             if (!storage.splashURL) return res;
 
-            if (targetNames.includes(name)) {
-                return { uri: storage.splashURL };
+            // Default to 1547 if not set
+            const targetId = parseInt(storage.splashAssetId || "1547");
+
+            if (id === targetId) {
+                // console.log(`CustomSplash: Intercepted asset ID ${id}`);
+                return {
+                    ...res,
+                    uri: storage.splashURL,
+                    // We might need to override width/height if the custom image is different
+                    // but usually just changing URI is enough if the view handles resizing
+                };
             }
 
             return res;
         });
 
-        showToast("CustomSplash: Patched asset system", getAssetIDByName("Check"));
+        showToast("CustomSplash: Patched getAssetById", getAssetIDByName("Check"));
     },
     onUnload: () => {
         unpatch?.();

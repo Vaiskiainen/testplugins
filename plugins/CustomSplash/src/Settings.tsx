@@ -13,10 +13,12 @@ const ImagePicker = findByProps("launchImageLibrary");
 export default () => {
     useProxy(storage);
     const [url, setUrl] = React.useState(storage.splashURL || "");
+    const [assetId, setAssetId] = React.useState(storage.splashAssetId || "1547");
 
     const handleSave = () => {
         storage.splashURL = url;
-        showToast("Splash URL saved", getAssetIDByName("Check"));
+        storage.splashAssetId = assetId;
+        showToast("Settings saved", getAssetIDByName("Check"));
     };
 
     const handlePickImage = async () => {
@@ -52,6 +54,12 @@ export default () => {
                 placeholder="https://example.com/image.png"
                 value={url}
                 onChange={setUrl}
+            />
+            <FormInput
+                title="Target Asset ID"
+                placeholder="1547"
+                value={assetId}
+                onChange={setAssetId}
             />
             <FormDivider />
             <FormRow
