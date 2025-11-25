@@ -9,20 +9,34 @@ let unpatch;
 
 export default {
     onLoad: () => {
-        const AssetModule = findByProps("getAssetIDByName");
+        // Try multiple ways to find the asset module
+        const AssetModule = findByProps("getAssetIDByName") ||
+            findByProps("registerAsset") ||
+            findByProps("getAssetById");
+
         if (!AssetModule) {
             console.error("CustomSplash: AssetModule not found");
             showToast("CustomSplash: AssetModule not found", getAssetIDByName("Small"));
             return;
         }
 
+        // Determine the function name
+        let funcName = "getAssetIDByName";
+        if (!AssetModule[funcName]) {
+            if (AssetModule.getAssetIdByName) {
+                funcName = "getAssetIdByName";
+            } else {
+                showToast(`CustomSplash: ${funcName} not found on module`, getAssetIDByName("Small"));
+                return;
+            }
+        }
+
         const targetNames = ["logo", "LaunchScreen", "Splash", "SimpleSplash"];
 
-        unpatch = patcher.after("getAssetIDByName", AssetModule, ([name], res) => {
+        unpatch = patcher.after(funcName, AssetModule, ([name], res) => {
             if (!storage.splashURL) return res;
 
             if (targetNames.includes(name)) {
-                // console.log(`CustomSplash: Intercepted asset ${name}`);
                 return { uri: storage.splashURL };
             }
 
