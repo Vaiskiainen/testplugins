@@ -1,51 +1,60 @@
 import { patcher } from "@vendetta";
 import { findByProps } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
+import { showToast } from "@vendetta/ui/toasts";
+import { getAssetIDByName } from "@vendetta/ui/assets";
+import Settings from "./Settings";
 
 const LaunchScreen = findByProps("LaunchScreen");
 
 let unpatch;
 
-function replaceImage(node: any) {
-    if (!node) return;
+function replaceImage(node: any): boolean {
+    if (!node || !node.props) return false;
 
-    // Check if the node is an Image component
-    // This is a heuristic: check for 'source' prop and 'Image' in displayName if possible, 
-    // or just assume any Image in LaunchScreen is the logo.
-    // A safer bet is checking if the source is a local asset (number) which the logo usually is.
-    if (node.props && typeof node.props.source === "number") {
+    let replaced = false;
+
+    // Check if the node has a source prop (Image or FastImage)
+    if (node.props.source) {
+        // We assume any image in the LaunchScreen is the logo we want to replace
+        // This might replace background too if it's an image, but usually it's a View with color
         node.props.source = { uri: storage.splashURL };
-        // We might also need to adjust style if the custom image has different aspect ratio, 
-        // but let's stick to source replacement for now.
+        node.props.resizeMode = 'contain';
+        replaced = true;
     }
 
-    if (node.props && node.props.children) {
+    if (node.props.children) {
         if (Array.isArray(node.props.children)) {
-            node.props.children.forEach(replaceImage);
+            for (const child of node.props.children) {
+                if (replaceImage(child)) replaced = true;
+            }
         } else {
-            replaceImage(node.props.children);
+            if (replaceImage(node.props.children)) replaced = true;
         }
     }
-}
 
-import Settings from "./Settings";
+    return replaced;
+}
 
 export default {
     onLoad: () => {
         if (!LaunchScreen) {
             console.error("CustomSplash: LaunchScreen not found");
+            showToast("CustomSplash: LaunchScreen not found", getAssetIDByName("Small"));
             return;
         }
 
-        // Patch the render method if it's a class, or the function if it's a functional component
-        // LaunchScreen module usually exports the component as default
         unpatch = patcher.after("default", LaunchScreen, (_, res) => {
             if (!storage.splashURL) return res;
 
             try {
-                replaceImage(res);
+                const success = replaceImage(res);
+                if (success) {
+                    // console.log("CustomSplash: Successfully replaced splash image");
+                }
             } catch (e) {
                 console.error("CustomSplash: Failed to replace image", e);
+                showToast("CustomSplash: Failed to replace image", getAssetIDByName("Small"));
             }
             return res;
         });
