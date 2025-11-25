@@ -44,7 +44,7 @@ export default {
             return;
         }
 
-        unpatch = patcher.after("default", LaunchScreen, (_, res) => {
+        const patchCallback = (_, res) => {
             if (!storage.splashURL) return res;
 
             try {
@@ -54,10 +54,28 @@ export default {
                 }
             } catch (e) {
                 console.error("CustomSplash: Failed to replace image", e);
-                showToast("CustomSplash: Failed to replace image", getAssetIDByName("Small"));
             }
             return res;
-        });
+        };
+
+        // Try patching default export
+        if (LaunchScreen.default) {
+            unpatch = patcher.after("default", LaunchScreen, patchCallback);
+        }
+        // Try patching named export 'LaunchScreen'
+        else if (LaunchScreen.LaunchScreen) {
+            unpatch = patcher.after("LaunchScreen", LaunchScreen, patchCallback);
+        }
+        else {
+            // Fallback: try to find which property is the component
+            const keys = Object.keys(LaunchScreen);
+            const componentKey = keys.find(k => typeof LaunchScreen[k] === 'function' || typeof LaunchScreen[k] === 'object');
+            if (componentKey) {
+                unpatch = patcher.after(componentKey, LaunchScreen, patchCallback);
+            } else {
+                showToast("Could not find component in LaunchScreen module", getAssetIDByName("Small"));
+            }
+        }
     },
     onUnload: () => {
         unpatch?.();
