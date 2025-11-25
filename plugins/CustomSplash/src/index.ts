@@ -1,11 +1,9 @@
 import { patcher } from "@vendetta";
-import { findByProps } from "@vendetta/metro";
+import { findByProps, findByDisplayName } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
 import { showToast } from "@vendetta/ui/toasts";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import Settings from "./Settings";
-
-const LaunchScreen = findByProps("LaunchScreen");
 
 let unpatch;
 
@@ -38,44 +36,67 @@ function replaceImage(node: any): boolean {
 
 export default {
     onLoad: () => {
-        if (!LaunchScreen) {
+        let Component;
+        let patchType = "default";
+        let target = null;
+
+        // Method 1: findByProps("LaunchScreen") - Failed previously but keeping it
+        const ModuleProps = findByProps("LaunchScreen");
+        if (ModuleProps) {
+            target = ModuleProps;
+            patchType = "LaunchScreen"; // Assuming named export
+            if (ModuleProps.default) patchType = "default";
+        }
+
+        // Method 2: findByDisplayName("LaunchScreen")
+        if (!target) {
+            const CompDisplay = findByDisplayName("LaunchScreen");
+            if (CompDisplay) {
+                // If it's a class component, we can patch prototype.render
+                if (CompDisplay.prototype && CompDisplay.prototype.render) {
+                    target = CompDisplay.prototype;
+                    patchType = "render";
+                } else {
+                    // Functional component. We need the module to patch it.
+                    // But we don't have the module. 
+                    // However, sometimes findByDisplayName returns the module if it's a default export? 
+                    // Unlikely. 
+                    // We can try to patch the function itself if it's mutable? No.
+                    console.log("Found LaunchScreen via displayName but it is functional");
+                }
+            }
+        }
+
+        // Method 3: findByDisplayName("Splash")
+        if (!target) {
+            const CompDisplay = findByDisplayName("Splash");
+            if (CompDisplay) {
+                if (CompDisplay.prototype && CompDisplay.prototype.render) {
+                    target = CompDisplay.prototype;
+                    patchType = "render";
+                }
+            }
+        }
+
+        if (!target) {
             console.error("CustomSplash: LaunchScreen not found");
             showToast("CustomSplash: LaunchScreen not found", getAssetIDByName("Small"));
             return;
         }
 
+        showToast(`Patching ${patchType}`, getAssetIDByName("Check"));
+
         const patchCallback = (_, res) => {
             if (!storage.splashURL) return res;
-
             try {
-                const success = replaceImage(res);
-                if (success) {
-                    // console.log("CustomSplash: Successfully replaced splash image");
-                }
+                replaceImage(res);
             } catch (e) {
                 console.error("CustomSplash: Failed to replace image", e);
             }
             return res;
         };
 
-        // Try patching default export
-        if (LaunchScreen.default) {
-            unpatch = patcher.after("default", LaunchScreen, patchCallback);
-        }
-        // Try patching named export 'LaunchScreen'
-        else if (LaunchScreen.LaunchScreen) {
-            unpatch = patcher.after("LaunchScreen", LaunchScreen, patchCallback);
-        }
-        else {
-            // Fallback: try to find which property is the component
-            const keys = Object.keys(LaunchScreen);
-            const componentKey = keys.find(k => typeof LaunchScreen[k] === 'function' || typeof LaunchScreen[k] === 'object');
-            if (componentKey) {
-                unpatch = patcher.after(componentKey, LaunchScreen, patchCallback);
-            } else {
-                showToast("Could not find component in LaunchScreen module", getAssetIDByName("Small"));
-            }
-        }
+        unpatch = patcher.after(patchType, target, patchCallback);
     },
     onUnload: () => {
         unpatch?.();
