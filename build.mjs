@@ -12,7 +12,7 @@ const extensions = [".js", ".jsx", ".mjs", ".ts", ".tsx", ".cts", ".mts"];
 
 /** @type import("rollup").InputPluginOption */
 const plugins = [
-    nodeResolve(),
+    nodeResolve({ extensions }),
     commonjs(),
     {
         name: "swc",

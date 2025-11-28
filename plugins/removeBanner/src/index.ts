@@ -1,100 +1,74 @@
 import { instead } from "@vendetta/patcher";
 import { findByProps, findByStoreName, findByDisplayName } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
-import { useProxy } from "@vendetta/storage";
+import SettingsPanel from "./Settings";
 
-import Settings from "./settings.tsx";
+storage.removeBanner ??= true;
+storage.removeSplash ??= false;
+storage.aggressiveMode ??= true;
+storage.whitelist ??= []; 
 
 let patches: Function[] = [];
 
-const defaults = {
-  removeBanner: true,
-  removeSplash: false,
-  aggressiveMode: true,
-};
-
-storage.removeBanner ??= defaults.removeBanner;
-storage.removeSplash ??= defaults.removeSplash;
-storage.aggressiveMode ??= defaults.aggressiveMode;
-
 export default {
   onLoad() {
-    useProxy(storage);
-
-    const unloadAll = () => {
-      patches.forEach(p => p());
+    const unload = () => patches.forEach(p => p && p());
+    const load = () => {
+      unload();
       patches = [];
-    };
-
-    const applyPatches = () => {
-      unloadAll();
-
-
-      [findByProps("getGuild", "getGuilds"), findByStoreName("GuildCacheStore"), findByStoreName("GuildStore")]
+      [findByProps("getGuild"), findByStoreName("GuildCacheStore"), findByStoreName("GuildStore")]
         .filter(Boolean)
         .forEach(store => {
-          if (store?.getGuild) {
-            patches.push(
-              instead("getGuild", store, (args, orig) => {
-                const guild = orig(...args);
-                if (!guild) return guild;
-                if (storage.removeBanner) {
-                  guild.banner = null;
-                  guild.bannerId = null;
-                }
-                if (storage.removeSplash) guild.splash = null;
-                return guild;
-              })
-            );
-          }
-        });
-
-
-      const urlModules = [
-        findByProps("getGuildBannerURL"),
-        findByProps("getGuildSplashURL"),
-        findByProps("getGuildBannerURL", "getGuildSplashURL")
-      ].filter(Boolean);
-
-      urlModules.forEach(mod => {
-        if (storage.removeBanner && mod.getGuildBannerURL)
-          patches.push(instead("getGuildBannerURL", mod, () => null));
-        if (storage.removeSplash && mod.getGuildSplashURL)
-          patches.push(instead("getGuildSplashURL", mod, () => null));
-      });
-
-
-      if (storage.aggressiveMode) {
-        const Header =
-          findByProps("GuildHeader")?.GuildHeader ||
-          findByProps("Header")?.Header ||
-          findByDisplayName("GuildHeader", false);
-
-        if (Header?.prototype?.render) {
-          patches.push(
-            instead("render", Header.prototype, function (args, orig) {
-              const res = orig.apply(this, args);
-              if (res?.props) {
-                res.props.bannerSource = null;
-                res.props.banner = null;
-                if (res.props.guild) res.props.guild.banner = null;
+          store.getGuild && patches.push(
+            instead("getGuild", store, (args, orig) => {
+              const g = orig(...args);
+              if (g && storage.removeBanner && !storage.whitelist.includes(g.id)) {
+                g.banner = g.bannerId = null;
               }
-              return res;
+              if (g && storage.removeSplash && !storage.whitelist.includes(g.id)) {
+                g.splash = null;
+              }
+              return g;
             })
           );
-        }
+        });
+      [findByProps("getGuildBannerURL"), findByProps("getGuildSplashURL")]
+        .filter(Boolean)
+        .forEach(mod => {
+          if (storage.removeBanner && mod.getGuildBannerURL) {
+            patches.push(instead("getGuildBannerURL", mod, (args, orig) => {
+              const guild = args[0];
+              if (guild && storage.whitelist.includes(guild.id)) return orig(...args);
+              return null;
+            }));
+          }
+          if (storage.removeSplash && mod.getGuildSplashURL) {
+            patches.push(instead("getGuildSplashURL", mod, (args, orig) => {
+              const guild = args[0];
+              if (guild && storage.whitelist.includes(guild.id)) return orig(...args);
+              return null;
+            }));
+          }
+        });
+      if (storage.aggressiveMode) {
+        const Header = findByProps("GuildHeader")?.GuildHeader ||
+          findByDisplayName("GuildHeader", false);
+        Header?.prototype?.render && patches.push(
+          instead("render", Header.prototype, (args, orig) => {
+            const res = orig(...args);
+            if (res?.props && res.props.guild && !storage.whitelist.includes(res.props.guild.id)) {
+              res.props.banner = res.props.bannerSource = null;
+              res.props.guild.banner = null;
+            }
+            return res;
+          })
+        );
       }
     };
-
-    applyPatches();
-
-    storage.__reloadPatches = applyPatches;
+    load();
   },
-
   onUnload() {
-    patches.forEach(p => p());
-    patches = [];
+    patches.forEach(p => p && p());
   },
-
-  settings: Settings
+  settings: SettingsPanel
 };
