@@ -3,7 +3,7 @@ import { findByProps, findByStoreName, findByDisplayName } from "@vendetta/metro
 import { storage } from "@vendetta/plugin";
 import { useProxy } from "@vendetta/storage";
 
-import Settings from "./settings";
+import Settings from "./settings.tsx";
 
 let patches: Function[] = [];
 
@@ -38,14 +38,11 @@ export default {
               instead("getGuild", store, (args, orig) => {
                 const guild = orig(...args);
                 if (!guild) return guild;
-
                 if (storage.removeBanner) {
                   guild.banner = null;
                   guild.bannerId = null;
                 }
-                if (storage.removeSplash) {
-                  guild.splash = null;
-                }
+                if (storage.removeSplash) guild.splash = null;
                 return guild;
               })
             );
@@ -66,6 +63,7 @@ export default {
           patches.push(instead("getGuildSplashURL", mod, () => null));
       });
 
+
       if (storage.aggressiveMode) {
         const Header =
           findByProps("GuildHeader")?.GuildHeader ||
@@ -79,7 +77,7 @@ export default {
               if (res?.props) {
                 res.props.bannerSource = null;
                 res.props.banner = null;
-                if (res.props.guild?.banner) res.props.guild.banner = null;
+                if (res.props.guild) res.props.guild.banner = null;
               }
               return res;
             })
@@ -90,8 +88,7 @@ export default {
 
     applyPatches();
 
-
-    storage.__reload = applyPatches;
+    storage.__reloadPatches = applyPatches;
   },
 
   onUnload() {
