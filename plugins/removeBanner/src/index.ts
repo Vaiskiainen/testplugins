@@ -1,24 +1,38 @@
-import { metro } from "bunny";
-import { plugin } from "vendetta";
+import { metro } from "@vendetta/metro";
+import { patcher } from "@vendetta/patcher";
+
 
 let unpatch: () => void = () => {};
 
-const ServerHeader = metro.findByTypeDisplayNameLazy("GuildHeader");
+const GuildHeaderModule = metro.find(m => m.default?.displayName === "GuildHeader");
 
 export default {
-  onLoad(api: any) {
-    if (!ServerHeader?.type) return;
+  onLoad() {
 
-    unpatch = api.patcher.before("render", ServerHeader.type, ([props]: any) => {
-      props.banner = null;
-      props.bannerImage = null;
-      props.bannerSource = null;
+    if (!GuildHeaderModule) return;
+
+
+    unpatch = patcher.before("default", GuildHeaderModule, (args) => {
+
+      const [props] = args;
+      
+
+
+      if (props) {
+        props.banner = null;
+        props.bannerImage = null;
+        props.bannerSource = null;
+      }
+      
+
     });
   },
 
   onUnload() {
+
     unpatch();
   },
+
 
   settings: null
 };
