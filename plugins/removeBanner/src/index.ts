@@ -1,48 +1,95 @@
 import { instead } from "@vendetta/patcher";
 import { findByProps, findByStoreName } from "@vendetta/metro";
+import { storage } from "@vendetta/plugin";
+import { useProxy } from "@vendetta/storage";
 
-let patches = [];
+import Settings from "./settings";
+
+let patches: Function[] = [];
+
+const defaults = {
+  removeBanner: true,
+  removeSplash: false,
+  aggressiveMode: true,
+};
+
+storage.removeBanner ??= defaults.removeBanner;
+storage.removeSplash ??= defaults.removeSplash;
+storage.aggressiveMode ??= defaults.aggressiveMode;
 
 export default {
   onLoad() {
-    const GuildStore = findByProps("getGuild", "getGuilds");
-    const GuildCacheStore = findByStoreName("GuildCacheStore");
-    const fluxPatcher = findByProps("dispatch", "subscribe");
+    useProxy(storage);
+
+    const unloadAll = () => {
+      patches.forEach(p => p());
+      patches = [];
+    };
+
+    const applyPatches = () => {
+      unloadAll();
 
 
-    if (GuildStore) {
-      patches.push(
-        instead("getGuild", GuildStore, (args, original) => {
-          const guild = original.apply(this, args);
-          if (guild) {
-            guild.banner = null;
-            guild.bannerId = null;
-            guild.splash = null; 
+      [findByProps("getGuild", "getGuilds"), findByStoreName("GuildCacheStore"), findByStoreName("GuildStore")]
+        .filter(Boolean)
+        .forEach(store => {
+          if (store.getGuild) {
+            patches.push(
+              instead("getGuild", store, (args, orig) => {
+                const guild = orig(...args);
+                if (!guild) return guild;
+                if (storage.removeBanner) {
+                  guild.banner = null;
+                  guild.bannerId = null;
+                }
+                if (storage.removeSplash) guild.splash = null;
+                return guild;
+              })
+            );
           }
-          return guild;
-        })
-      );
-    }
+        });
 
-    if (GuildCacheStore?.getGuild) {
-      patches.push(
-        instead("getGuild", GuildCacheStore, (args, original) => {
-          const guild = original.apply(this, args);
-          if (guild) {
-            guild.banner = null;
-            guild.bannerId = null;
-          }
-          return guild;
-        })
-      );
-    }
 
-    patches.push(
-      instead("getGuildBannerURL", findByProps("getGuildBannerURL"), () => null),
-      instead("getGuildSplashURL", findByProps("getGuildSplashURL"), () => null)
-    );
+      const urlModules = [
+        findByProps("getGuildBannerURL"),
+        findByProps("getGuildSplashURL"),
+        findByProps("getGuildBannerURL", "getGuildSplashURL")
+      ].filter(Boolean);
 
-    console.log("[RemoveBanner] Fully loaded – no more banners anywhere!");
+      urlModules.forEach(mod => {
+        if (storage.removeBanner && mod.getGuildBannerURL)
+          patches.push(instead("getGuildBannerURL", mod, () => null));
+        if (storage.removeSplash && mod.getGuildSplashURL)
+          patches.push(instead("getGuildSplashURL", mod, () => null));
+      });
+
+
+      if (storage.aggressiveMode) && (() => {
+        const Header = findByProps("GuildHeader")?.GuildHeader ||
+                       findByProps("Header")?.Header ||
+                       findByDisplayName("GuildHeader", false);
+
+        if (Header?.prototype?.render) {
+          patches.push(
+            instead("render", Header.prototype, function (args, orig) {
+              const res = orig.apply(this, args);
+              if (res?.props) {
+                res.props.bannerSource = null;
+                res.props.banner = null;
+                if (res.props.guild) res.props.guild.banner = null;
+              }
+              return res;
+            })
+          );
+        }
+      })();
+    };
+
+    applyPatches();
+
+
+    const watcher = () => applyPatches();
+    storage.__watcher = watcher;
   },
 
   onUnload() {
@@ -50,5 +97,5 @@ export default {
     patches = [];
   },
 
-  settings: null
+  settings: Settings
 };
