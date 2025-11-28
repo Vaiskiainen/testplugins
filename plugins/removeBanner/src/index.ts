@@ -1,55 +1,48 @@
-import { findByProps, findByDisplayName } from "@vendetta/metro";
-import { after } from "@vendetta/patcher";
-import { instead } from "@vendetta/patcher"; 
+import { instead } from "@vendetta/patcher";
+import { findByProps, findByStoreName } from "@vendetta/metro";
 
-let patches: Function[] = [];
+let patches = [];
 
 export default {
   onLoad() {
-
-    const Header = findByDisplayName("GuildHeader", false) || 
-                  findByProps("GuildHeader")?.GuildHeader;
-
-    if (!Header) {
-      console.warn("[RemoveBanner] GuildHeader not found");
-      return;
-    }
+    const GuildStore = findByProps("getGuild", "getGuilds");
+    const GuildCacheStore = findByStoreName("GuildCacheStore"); // uusi 2025
+    const fluxPatcher = findByProps("dispatch", "subscribe");
 
 
-    patches.push(
-      after("render", Header.prototype, (_, ret) => {
-        if (ret?.props?.header) {
-
-          if (ret.props.header.props?.bannerSource) {
-            ret.props.header.props.bannerSource = null;
-          }
-          if (ret.props.header.props?.banner) {
-            ret.props.header.props.banner = null;
-          }
-        }
-
-
-        if (ret?.props?.banner) ret.props.banner = null;
-        if (ret?.props?.bannerSource) ret.props.bannerSource = null;
-        if (ret?.props?.guild?.banner) ret.props.guild.banner = null;
-
-        return ret;
-      })
-    );
-
-
-    const GuildStore = findByProps("getGuild");
     if (GuildStore) {
       patches.push(
-        instead("getGuild", GuildStore, (args, orig) => {
-          const guild = orig(...args);
-          if (guild) guild.banner = null;
+        instead("getGuild", GuildStore, (args, original) => {
+          const guild = original.apply(this, args);
+          if (guild) {
+            guild.banner = null;
+            guild.bannerId = null;
+            guild.splash = null; 
+          }
           return guild;
         })
       );
     }
 
-    console.log("[RemoveBanner] Loaded successfully – banners hidden!");
+    if (GuildCacheStore?.getGuild) {
+      patches.push(
+        instead("getGuild", GuildCacheStore, (args, original) => {
+          const guild = original.apply(this, args);
+          if (guild) {
+            guild.banner = null;
+            guild.bannerId = null;
+          }
+          return guild;
+        })
+      );
+    }
+
+    patches.push(
+      instead("getGuildBannerURL", findByProps("getGuildBannerURL"), () => null),
+      instead("getGuildSplashURL", findByProps("getGuildSplashURL"), () => null)
+    );
+
+    console.log("[RemoveBanner] Fully loaded – no more banners anywhere!");
   },
 
   onUnload() {
