@@ -1,0 +1,1 @@
+(function(n,u){"use strict";let r=function(){};const t=u.metro.findByTypeDisplayNameLazy("GuildHeader");var l={onLoad(a){t?.type&&(r=a.patcher.before("render",t.type,function([e]){e.banner=null,e.bannerImage=null,e.bannerSource=null}))},onUnload(){r()},settings:null};return n.default=l,Object.defineProperty(n,"__esModule",{value:!0}),n})({},bunny);
