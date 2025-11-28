@@ -6,7 +6,7 @@ let patches = [];
 export default {
   onLoad() {
     const GuildStore = findByProps("getGuild", "getGuilds");
-    const GuildCacheStore = findByStoreName("GuildCacheStore"); // uusi 2025
+    const GuildCacheStore = findByStoreName("GuildCacheStore");
     const fluxPatcher = findByProps("dispatch", "subscribe");
 
 
