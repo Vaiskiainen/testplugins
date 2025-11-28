@@ -1,5 +1,5 @@
 import { instead } from "@vendetta/patcher";
-import { findByProps, findByStoreName } from "@vendetta/metro";
+import { findByProps, findByStoreName, findByDisplayName } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
 import { useProxy } from "@vendetta/storage";
 
@@ -33,16 +33,19 @@ export default {
       [findByProps("getGuild", "getGuilds"), findByStoreName("GuildCacheStore"), findByStoreName("GuildStore")]
         .filter(Boolean)
         .forEach(store => {
-          if (store.getGuild) {
+          if (store?.getGuild) {
             patches.push(
               instead("getGuild", store, (args, orig) => {
                 const guild = orig(...args);
                 if (!guild) return guild;
+
                 if (storage.removeBanner) {
                   guild.banner = null;
                   guild.bannerId = null;
                 }
-                if (storage.removeSplash) guild.splash = null;
+                if (storage.removeSplash) {
+                  guild.splash = null;
+                }
                 return guild;
               })
             );
@@ -63,11 +66,11 @@ export default {
           patches.push(instead("getGuildSplashURL", mod, () => null));
       });
 
-
-      if (storage.aggressiveMode) && (() => {
-        const Header = findByProps("GuildHeader")?.GuildHeader ||
-                       findByProps("Header")?.Header ||
-                       findByDisplayName("GuildHeader", false);
+      if (storage.aggressiveMode) {
+        const Header =
+          findByProps("GuildHeader")?.GuildHeader ||
+          findByProps("Header")?.Header ||
+          findByDisplayName("GuildHeader", false);
 
         if (Header?.prototype?.render) {
           patches.push(
@@ -76,20 +79,19 @@ export default {
               if (res?.props) {
                 res.props.bannerSource = null;
                 res.props.banner = null;
-                if (res.props.guild) res.props.guild.banner = null;
+                if (res.props.guild?.banner) res.props.guild.banner = null;
               }
               return res;
             })
           );
         }
-      })();
+      }
     };
 
     applyPatches();
 
 
-    const watcher = () => applyPatches();
-    storage.__watcher = watcher;
+    storage.__reload = applyPatches;
   },
 
   onUnload() {
