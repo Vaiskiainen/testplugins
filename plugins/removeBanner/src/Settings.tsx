@@ -1,6 +1,6 @@
 import { useProxy } from "@vendetta/storage";
 import { Forms, General } from "@vendetta/ui/components";
-import { getAssetIDByName } from "@vendetta/metro";
+import { getAssetIDByName } from "@vendetta/ui/assets";
 import { storage } from "@vendetta/plugin";
 
 const { ScrollView } = General;
