@@ -20,7 +20,7 @@ export default {
 
     if (storage.lastShown !== currentDate) {
       const days = getDaysToChristmas();
-      showToast(`Only ${days} days until Christmas!`);
+      showToast(`Only ${days} days until Christmas! 🎁`);
       storage.lastShown = currentDate;
     }
   },
