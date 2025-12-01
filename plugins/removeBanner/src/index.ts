@@ -10,12 +10,39 @@ storage.whitelist ??= [];
 
 let patches = [];
 
+const shallowClonePreserveProto = (obj) => {
+  if (!obj || typeof obj !== "object") return obj;
+  const clone = Object.create(Object.getPrototypeOf(obj));
+  Object.assign(clone, obj);
+  return clone;
+};
+
+const refreshGuilds = () => {
+  try {
+    const GuildActions = findByProps("fetchGuild", "fetchGuilds", "fetchGuildPreview");
+    const GuildStore = findByStoreName("GuildStore") || findByStoreName("GuildCacheStore");
+    const guilds = (GuildStore && (GuildStore.getGuilds ? GuildStore.getGuilds() : (GuildStore.guilds || {}))) || {};
+    const ids = Object.keys(guilds);
+    if (!ids.length) return;
+
+    ids.forEach(id => {
+      try {
+        if (GuildActions?.fetchGuild) GuildActions.fetchGuild(id);
+        else if (GuildActions?.fetchGuilds) GuildActions.fetchGuilds([id]);
+        else if (GuildActions?.fetchGuildPreview) GuildActions.fetchGuildPreview(id);
+      } catch {}
+    });
+
+  } catch {}
+};
+
 export default {
   onLoad() {
-    const unload = () => patches.forEach(p => p?.());
+    const unloadPatches = () => patches.forEach(p => p?.());
     const load = () => {
-      unload();
+      unloadPatches();
       patches = [];
+
       [findByProps("getGuild"), findByStoreName("GuildCacheStore"), findByStoreName("GuildStore")]
         .filter(Boolean)
         .forEach(store => {
@@ -23,19 +50,23 @@ export default {
 
           patches.push(after("getGuild", store, (args, res) => {
             if (!res) return res;
-
             const id = res.id;
 
-            if (storage.removeBanner && !storage.whitelist.includes(id)) {
-              res.banner = null;
-              res.bannerId = null;
+            const shouldRemoveBanner = storage.removeBanner && !storage.whitelist.includes(id);
+            const shouldRemoveSplash = storage.removeSplash && !storage.whitelist.includes(id);
+
+            if (!shouldRemoveBanner && !shouldRemoveSplash) return res;
+
+            const out = shallowClonePreserveProto(res);
+            if (shouldRemoveBanner) {
+              out.banner = null;
+              out.bannerId = null;
+            }
+            if (shouldRemoveSplash) {
+              out.splash = null;
             }
 
-            if (storage.removeSplash && !storage.whitelist.includes(id)) {
-              res.splash = null;
-            }
-
-            return res;
+            return out;
           }));
         });
 
@@ -61,7 +92,6 @@ export default {
           }
         });
 
-
       if (storage.aggressiveMode) {
         const Header =
           findByProps("GuildHeader")?.GuildHeader ||
@@ -72,21 +102,27 @@ export default {
             const guild = res?.props?.guild;
             if (!guild || storage.whitelist.includes(guild.id)) return res;
 
-            res.props.banner = null;
-            res.props.bannerSource = null;
-            guild.banner = null;
+            const newRes = { ...res };
+            newRes.props = { ...res.props };
+            newRes.props.guild = shallowClonePreserveProto(res.props.guild);
 
-            return res;
+            newRes.props.banner = null;
+            newRes.props.bannerSource = null;
+            newRes.props.guild.banner = null;
+
+            return newRes;
           }));
         }
       }
     };
 
     load();
+    try { refreshGuilds(); } catch {}
   },
 
   onUnload() {
     patches.forEach(p => p?.());
+    try { refreshGuilds(); } catch {}
   },
 
   settings: SettingsPanel,
