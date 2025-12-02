@@ -21,9 +21,11 @@ const Dispatcher = findByProps("dispatch", "subscribe");
 
 const forceRerenderAll = () => {
   try {
-
     Dispatcher.dispatch({ type: "GUILD_SYNC" });
+    Dispatcher.dispatch({ type: "GUILD_MEMBER_LIST_UPDATE", guildId: null });
+    Dispatcher.dispatch({ type: "GUILD_STREAM_UPDATE" });
   } catch {}
+};
 };
 
 const refreshGuilds = () => {
@@ -101,6 +103,40 @@ export default {
             }));
           }
         });
+
+const GuildHooks = findByProps("useGuild", "useGuildBanner", "useGuildSplash");
+if (GuildHooks?.useGuild) {
+  patches.push(after("useGuild", GuildHooks, (args, res) => {
+    if (!res) return res;
+    const id = args[0]?.id ?? res.id;
+    if (!id || storage.whitelist.includes(id)) return res;
+    const out = shallowClonePreserveProto(res);
+    if (storage.removeBanner) {
+      out.banner = null;
+      out.bannerId = null;
+    }
+    if (storage.removeSplash) out.splash = null;
+    return out;
+  }));
+}
+
+if (GuildHooks?.useGuildBanner) {
+  patches.push(after("useGuildBanner", GuildHooks, (args, url) => {
+    const guild = args[0];
+    if (!guild) return url;
+    if (storage.whitelist.includes(guild.id)) return url;
+    return storage.removeBanner ? null : url;
+  }));
+}
+
+if (GuildHooks?.useGuildSplash) {
+  patches.push(after("useGuildSplash", GuildHooks, (args, url) => {
+    const guild = args[0];
+    if (!guild) return url;
+    if (storage.whitelist.includes(guild.id)) return url;
+    return storage.removeSplash ? null : url;
+  }));
+}
 
       const BannerHook = findByProps("useGuildBanner");
       if (BannerHook?.useGuildBanner) {
