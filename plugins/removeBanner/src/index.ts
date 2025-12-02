@@ -26,7 +26,6 @@ const forceRerenderAll = () => {
     Dispatcher.dispatch({ type: "GUILD_STREAM_UPDATE" });
   } catch {}
 };
-};
 
 const refreshGuilds = () => {
   try {
