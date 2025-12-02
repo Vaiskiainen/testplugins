@@ -5,7 +5,7 @@ import { showToast } from "@vendetta/ui/toasts";
 
 const { Text, View } = ReactNative;
 
-let unpatch;
+let unpatches = [];
 
 const VoiceTimer = () => {
   const VoiceStateStore = findByProps("getVoiceStates", "getVoiceState");
@@ -15,29 +15,23 @@ const VoiceTimer = () => {
   const [now, setNow] = React.useState(Date.now());
 
   React.useEffect(() => {
+    showToast("VoiceTimer: Component Mounted!");
+
     if (!VoiceStateStore || !UserStore) {
-      console.log("VoiceTime: Stores not found");
+      showToast("VoiceTime: Stores not found");
       return;
     }
 
     const listener = () => {
       const user = UserStore.getCurrentUser();
       if (!user) {
-        console.log("VoiceTime: No user found");
         return;
       }
 
       const vs = VoiceStateStore.getVoiceState(user.id);
-      console.log("VoiceTime: Voice State Update", vs);
 
-      if (vs?.channelId && !joinTime) {
-        console.log("VoiceTime: Joined channel, setting start time");
-        setJoinTime(Date.now());
-      }
-      if (!vs?.channelId && joinTime) {
-        console.log("VoiceTime: Left channel, clearing start time");
-        setJoinTime(null);
-      }
+      if (vs?.channelId && !joinTime) setJoinTime(Date.now());
+      if (!vs?.channelId && joinTime) setJoinTime(null);
     };
 
     VoiceStateStore.addChangeListener(listener);
@@ -53,9 +47,9 @@ const VoiceTimer = () => {
     return () => clearInterval(int);
   }, [joinTime]);
 
-  // Always render something to verify mounting
+
   if (!joinTime) {
-    return React.createElement(Text, { style: { color: "red" } }, " VT: Idle ");
+    return React.createElement(Text, { style: { color: "red", backgroundColor: "yellow" } }, " VT: Idle ");
   }
 
   const diff = Math.floor((now - joinTime) / 1000);
@@ -82,12 +76,8 @@ const VoiceTimer = () => {
 export default {
   onLoad() {
     try {
-      showToast("VoiceTime: Plugin loading...");
-      console.log("VoiceTime: Plugin loading...");
-
-      const ChannelHeaderModule = findByName("ChannelHeader", false);
-      const ChannelHeaderProps = findByProps("ChannelHeader");
-      const ChannelHeaderDisplayName = findByDisplayName("ChannelHeader", false);
+      showToast("VoiceTime: Plugin loading v3...");
+      unpatches = [];
 
       const patchCallback = (args, res) => {
         if (!res?.props?.children) return res;
@@ -97,7 +87,7 @@ export default {
           : [res.props.children];
 
         children.push(
-          React.createElement(View, { style: { flexDirection: "row", alignItems: "center" } },
+          React.createElement(View, { style: { flexDirection: "row", alignItems: "center", zIndex: 999 } },
             React.createElement(VoiceTimer)
           )
         );
@@ -106,19 +96,29 @@ export default {
         return res;
       };
 
+
+      const ChannelHeaderModule = findByName("ChannelHeader", false);
+      const ChannelHeaderProps = findByProps("ChannelHeader");
+      const ChannelHeaderDisplayName = findByDisplayName("ChannelHeader", false);
+
       if (ChannelHeaderModule?.default) {
-        unpatch = after("default", ChannelHeaderModule, patchCallback);
+        unpatches.push(after("default", ChannelHeaderModule, patchCallback));
         showToast("VoiceTime: Patched ChannelHeader (default)");
       } else if (ChannelHeaderProps?.ChannelHeader) {
-        unpatch = after("ChannelHeader", ChannelHeaderProps, patchCallback);
+        unpatches.push(after("ChannelHeader", ChannelHeaderProps, patchCallback));
         showToast("VoiceTime: Patched ChannelHeader (named)");
       } else if (ChannelHeaderDisplayName) {
-        unpatch = after("default", ChannelHeaderDisplayName, patchCallback);
+        unpatches.push(after("default", ChannelHeaderDisplayName, patchCallback));
         showToast("VoiceTime: Patched ChannelHeader (display name)");
-      } else {
-        console.log("[voiceTime] Could not find ChannelHeader");
-        showToast("VoiceTime: Could not find ChannelHeader");
       }
+
+
+      const Topic = findByName("Topic", false);
+      if (Topic?.default) {
+        unpatches.push(after("default", Topic, patchCallback));
+        showToast("VoiceTime: Patched Topic");
+      }
+
     } catch (e) {
       console.error("VoiceTime Error:", e);
       showToast(`VoiceTime Error: ${e.message}`);
@@ -126,6 +126,6 @@ export default {
   },
 
   onUnload() {
-    if (unpatch) unpatch();
+    unpatches.forEach(u => u());
   },
 };
