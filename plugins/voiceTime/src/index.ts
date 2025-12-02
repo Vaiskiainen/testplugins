@@ -4,99 +4,68 @@ import { after } from "@vendetta/patcher";
 
 const { Text } = ReactNative;
 
-let unpatch: (() => void) | undefined;
-
+let unpatch;
 
 const VoiceTimer = () => {
   const VoiceStateStore = findByProps("getVoiceStates", "getVoiceState");
   const UserStore = findByProps("getCurrentUser");
 
-  const [joinTime, setJoinTime] = React.useState<number | null>(null);
+  const [joinTime, setJoinTime] = React.useState(null);
   const [currentTime, setCurrentTime] = React.useState(Date.now());
 
   React.useEffect(() => {
     const listener = () => {
       const user = UserStore.getCurrentUser();
-      if (!user) return; 
+      if (!user) return;
 
       const state = VoiceStateStore.getVoiceState(user.id);
 
-      if (state?.channelId && !joinTime) {
-        setJoinTime(Date.now());
-      } 
-
-      else if (!state?.channelId && joinTime) {
-        setJoinTime(null);
-      }
+      if (state?.channelId && !joinTime) setJoinTime(Date.now());
+      else if (!state?.channelId && joinTime) setJoinTime(null);
     };
 
     VoiceStateStore.addChangeListener(listener);
-    
-
     listener();
 
-
     return () => VoiceStateStore.removeChangeListener(listener);
-  }, [joinTime]); 
-
+  }, [joinTime]);
 
   React.useEffect(() => {
-
     if (!joinTime) return;
-
-
-    const interval = setInterval(() => {
-      setCurrentTime(Date.now());
-    }, 1000);
-
+    const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [joinTime]); 
+  }, [joinTime]);
 
-  if (!joinTime) {
-    return null;
-  }
+  if (!joinTime) return null;
 
-  const seconds = Math.floor((currentTime - joinTime) / 1000);
-  const mins = Math.floor(seconds / 60);
-  
-
-  const secs = seconds % 60; 
-  
-  const formattedTime = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+  const diff = Math.floor((currentTime - joinTime) / 1000);
+  const mins = Math.floor(diff / 60);
+  const secs = diff % 60;
 
   return React.createElement(Text, {
     style: {
-      color: "#FFFFFF",
+      color: "#fff",
       fontSize: 14,
-      marginLeft: 10,
-    },
-  }, formattedTime);
+      marginTop: 4,
+    }
+  }, `${mins}:${secs < 10 ? "0" : ""}${secs}`);
 };
-
 
 export default {
   onLoad() {
+    const VoiceUserSummary = findByName("VoiceUserSummary");
 
-    const VoiceStateStore = findByProps("getVoiceStates", "getVoiceState");
-    const UserStore = findByProps("getCurrentUser");
-    const VoiceControls =
-      findByName("VoiceActivitySection") ??
-      findByProps("renderUserVolume") ??
-      findByProps("renderNoiseCancellationSection");
-
-    if (!VoiceStateStore || !VoiceControls || !UserStore) {
-      console.log("[voiceTime] Failed to find required modules");
+    if (!VoiceUserSummary) {
+      console.log("[voiceTime] Unable to find VoiceUserSummary");
       return;
     }
 
-
-    unpatch = after("default", VoiceControls, (args, res) => {
-      if (!res || !res.props) return res;
+    unpatch = after("default", VoiceUserSummary, (args, res) => {
+      if (!res?.props) return res;
 
       const children = Array.isArray(res.props.children)
-        ? res.props.children
+        ? [...res.props.children]
         : [res.props.children];
-
 
       children.push(React.createElement(VoiceTimer));
 
@@ -106,7 +75,6 @@ export default {
   },
 
   onUnload() {
-
     if (unpatch) unpatch();
   },
 };
