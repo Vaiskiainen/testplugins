@@ -76,18 +76,25 @@ const VoiceTimer = () => {
 export default {
   onLoad() {
     try {
-      showToast("VoiceTime: Plugin loading v3...");
+      showToast("VoiceTime: Plugin loading v4...");
       unpatches = [];
 
-      const patchCallback = (args, res) => {
-        if (!res?.props?.children) return res;
+      const patchCallback = (name) => (args, res) => {
+
+        if (!res) {
+          console.log(`VoiceTime: ${name} res is null`);
+          return res;
+        }
+
+        if (!res.props) res.props = {};
 
         const children = Array.isArray(res.props.children)
           ? [...res.props.children]
-          : [res.props.children];
+          : (res.props.children ? [res.props.children] : []);
 
         children.push(
-          React.createElement(View, { style: { flexDirection: "row", alignItems: "center", zIndex: 999 } },
+          React.createElement(View, { style: { flexDirection: "row", alignItems: "center", zIndex: 999, backgroundColor: 'blue', padding: 5 } },
+            React.createElement(Text, { style: { color: 'white' } }, `[${name}]`),
             React.createElement(VoiceTimer)
           )
         );
@@ -102,21 +109,28 @@ export default {
       const ChannelHeaderDisplayName = findByDisplayName("ChannelHeader", false);
 
       if (ChannelHeaderModule?.default) {
-        unpatches.push(after("default", ChannelHeaderModule, patchCallback));
-        showToast("VoiceTime: Patched ChannelHeader (default)");
+        unpatches.push(after("default", ChannelHeaderModule, patchCallback("ChannelHeader(default)")));
+        showToast("Patched ChannelHeader(default)");
       } else if (ChannelHeaderProps?.ChannelHeader) {
-        unpatches.push(after("ChannelHeader", ChannelHeaderProps, patchCallback));
-        showToast("VoiceTime: Patched ChannelHeader (named)");
+        unpatches.push(after("ChannelHeader", ChannelHeaderProps, patchCallback("ChannelHeader(named)")));
+        showToast("Patched ChannelHeader(named)");
       } else if (ChannelHeaderDisplayName) {
-        unpatches.push(after("default", ChannelHeaderDisplayName, patchCallback));
-        showToast("VoiceTime: Patched ChannelHeader (display name)");
+        unpatches.push(after("default", ChannelHeaderDisplayName, patchCallback("ChannelHeader(display)")));
+        showToast("Patched ChannelHeader(display)");
       }
 
 
       const Topic = findByName("Topic", false);
       if (Topic?.default) {
-        unpatches.push(after("default", Topic, patchCallback));
-        showToast("VoiceTime: Patched Topic");
+        unpatches.push(after("default", Topic, patchCallback("Topic")));
+        showToast("Patched Topic");
+      }
+
+
+      const Header = findByName("Header", false);
+      if (Header?.default) {
+        unpatches.push(after("default", Header, patchCallback("Header")));
+        showToast("Patched Header");
       }
 
     } catch (e) {
