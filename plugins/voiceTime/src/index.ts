@@ -15,16 +15,29 @@ const VoiceTimer = () => {
   const [now, setNow] = React.useState(Date.now());
 
   React.useEffect(() => {
-    if (!VoiceStateStore || !UserStore) return;
+    if (!VoiceStateStore || !UserStore) {
+      console.log("VoiceTime: Stores not found");
+      return;
+    }
 
     const listener = () => {
       const user = UserStore.getCurrentUser();
-      if (!user) return;
+      if (!user) {
+        console.log("VoiceTime: No user found");
+        return;
+      }
 
       const vs = VoiceStateStore.getVoiceState(user.id);
+      console.log("VoiceTime: Voice State Update", vs);
 
-      if (vs?.channelId && !joinTime) setJoinTime(Date.now());
-      if (!vs?.channelId && joinTime) setJoinTime(null);
+      if (vs?.channelId && !joinTime) {
+        console.log("VoiceTime: Joined channel, setting start time");
+        setJoinTime(Date.now());
+      }
+      if (!vs?.channelId && joinTime) {
+        console.log("VoiceTime: Left channel, clearing start time");
+        setJoinTime(null);
+      }
     };
 
     VoiceStateStore.addChangeListener(listener);
@@ -40,7 +53,10 @@ const VoiceTimer = () => {
     return () => clearInterval(int);
   }, [joinTime]);
 
-  if (!joinTime) return null;
+  // Always render something to verify mounting
+  if (!joinTime) {
+    return React.createElement(Text, { style: { color: "red" } }, " VT: Idle ");
+  }
 
   const diff = Math.floor((now - joinTime) / 1000);
   const m = Math.floor(diff / 60);
