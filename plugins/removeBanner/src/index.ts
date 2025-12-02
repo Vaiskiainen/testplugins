@@ -17,11 +17,20 @@ const shallowClonePreserveProto = (obj) => {
   return clone;
 };
 
+const Dispatcher = findByProps("dispatch", "subscribe");
+
+const forceRerenderAll = () => {
+  try {
+
+    Dispatcher.dispatch({ type: "GUILD_SYNC" });
+  } catch {}
+};
+
 const refreshGuilds = () => {
   try {
     const GuildActions = findByProps("fetchGuild", "fetchGuilds", "fetchGuildPreview");
     const GuildStore = findByStoreName("GuildStore") || findByStoreName("GuildCacheStore");
-    const guilds = (GuildStore && (GuildStore.getGuilds ? GuildStore.getGuilds() : (GuildStore.guilds || {}))) || {};
+    const guilds = (GuildStore?.getGuilds?.() || GuildStore?.guilds || {}) ?? {};
     const ids = Object.keys(guilds);
     if (!ids.length) return;
 
@@ -33,17 +42,23 @@ const refreshGuilds = () => {
       } catch {}
     });
 
+    Object.values(guilds).forEach(guild => {
+      Dispatcher.dispatch({ type: "GUILD_UPDATE", guild: { ...guild } });
+    });
+
+    forceRerenderAll();
   } catch {}
 };
 
 export default {
   onLoad() {
     const unloadPatches = () => patches.forEach(p => p?.());
+
     const load = () => {
       unloadPatches();
       patches = [];
 
-      [findByProps("getGuild"), findByStoreName("GuildCacheStore"), findByStoreName("GuildStore")]
+      [findByProps("getGuild"), findByStoreName("GuildCacheStore"), findByStoreName("GuildStore")] 
         .filter(Boolean)
         .forEach(store => {
           if (!store.getGuild) return;
@@ -51,26 +66,21 @@ export default {
           patches.push(after("getGuild", store, (args, res) => {
             if (!res) return res;
             const id = res.id;
-
-            const shouldRemoveBanner = storage.removeBanner && !storage.whitelist.includes(id);
-            const shouldRemoveSplash = storage.removeSplash && !storage.whitelist.includes(id);
-
-            if (!shouldRemoveBanner && !shouldRemoveSplash) return res;
+            const rmBanner = storage.removeBanner && !storage.whitelist.includes(id);
+            const rmSplash = storage.removeSplash && !storage.whitelist.includes(id);
+            if (!rmBanner && !rmSplash) return res;
 
             const out = shallowClonePreserveProto(res);
-            if (shouldRemoveBanner) {
+            if (rmBanner) {
               out.banner = null;
               out.bannerId = null;
             }
-            if (shouldRemoveSplash) {
-              out.splash = null;
-            }
-
+            if (rmSplash) out.splash = null;
             return out;
           }));
         });
 
-      [findByProps("getGuildBannerURL"), findByProps("getGuildSplashURL")]
+      [findByProps("getGuildBannerURL"), findByProps("getGuildSplashURL")] 
         .filter(Boolean)
         .forEach(mod => {
           if (mod.getGuildBannerURL) {
@@ -92,24 +102,28 @@ export default {
           }
         });
 
-      if (storage.aggressiveMode) {
-        const Header =
-          findByProps("GuildHeader")?.GuildHeader ||
-          findByDisplayName("GuildHeader", false);
+      const BannerHook = findByProps("useGuildBanner");
+      if (BannerHook?.useGuildBanner) {
+        patches.push(after("useGuildBanner", BannerHook, (args, url) => {
+          const guild = args[0];
+          if (!guild) return url;
+          if (storage.whitelist.includes(guild.id)) return url;
+          return storage.removeBanner ? null : url;
+        }));
+      }
 
+      if (storage.aggressiveMode) {
+        const Header = findByProps("GuildHeader")?.GuildHeader || findByDisplayName("GuildHeader", false);
         if (Header?.prototype?.render) {
           patches.push(after("render", Header.prototype, (args, res) => {
             const guild = res?.props?.guild;
             if (!guild || storage.whitelist.includes(guild.id)) return res;
 
-            const newRes = { ...res };
-            newRes.props = { ...res.props };
-            newRes.props.guild = shallowClonePreserveProto(res.props.guild);
-
+            const newRes = { ...res, props: { ...res.props } };
+            newRes.props.guild = shallowClonePreserveProto(guild);
             newRes.props.banner = null;
             newRes.props.bannerSource = null;
             newRes.props.guild.banner = null;
-
             return newRes;
           }));
         }
