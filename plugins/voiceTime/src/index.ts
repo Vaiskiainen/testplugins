@@ -1,5 +1,5 @@
 import { React, ReactNative } from "@vendetta/metro/common";
-import { findByProps, findByName } from "@vendetta/metro";
+import { findByProps, findByName, findByDisplayName } from "@vendetta/metro";
 import { after } from "@vendetta/patcher";
 import { showToast } from "@vendetta/ui/toasts";
 
@@ -65,35 +65,47 @@ const VoiceTimer = () => {
 
 export default {
   onLoad() {
-    const ChannelHeaderModule = findByName("ChannelHeader", false);
-    const ChannelHeaderProps = findByProps("ChannelHeader");
+    try {
+      showToast("VoiceTime: Plugin loading...");
+      console.log("VoiceTime: Plugin loading...");
 
-    const patchCallback = (args, res) => {
-      if (!res?.props?.children) return res;
+      const ChannelHeaderModule = findByName("ChannelHeader", false);
+      const ChannelHeaderProps = findByProps("ChannelHeader");
+      const ChannelHeaderDisplayName = findByDisplayName("ChannelHeader", false);
 
-      const children = Array.isArray(res.props.children)
-        ? [...res.props.children]
-        : [res.props.children];
+      const patchCallback = (args, res) => {
+        if (!res?.props?.children) return res;
 
-      children.push(
-        React.createElement(View, { style: { flexDirection: "row", alignItems: "center" } },
-          React.createElement(VoiceTimer)
-        )
-      );
+        const children = Array.isArray(res.props.children)
+          ? [...res.props.children]
+          : [res.props.children];
 
-      res.props.children = children;
-      return res;
-    };
+        children.push(
+          React.createElement(View, { style: { flexDirection: "row", alignItems: "center" } },
+            React.createElement(VoiceTimer)
+          )
+        );
 
-    if (ChannelHeaderModule?.default) {
-      unpatch = after("default", ChannelHeaderModule, patchCallback);
-      showToast("VoiceTime: Patched ChannelHeader (default)");
-    } else if (ChannelHeaderProps?.ChannelHeader) {
-      unpatch = after("ChannelHeader", ChannelHeaderProps, patchCallback);
-      showToast("VoiceTime: Patched ChannelHeader (named)");
-    } else {
-      console.log("[voiceTime] Could not find ChannelHeader");
-      showToast("VoiceTime: Could not find ChannelHeader");
+        res.props.children = children;
+        return res;
+      };
+
+      if (ChannelHeaderModule?.default) {
+        unpatch = after("default", ChannelHeaderModule, patchCallback);
+        showToast("VoiceTime: Patched ChannelHeader (default)");
+      } else if (ChannelHeaderProps?.ChannelHeader) {
+        unpatch = after("ChannelHeader", ChannelHeaderProps, patchCallback);
+        showToast("VoiceTime: Patched ChannelHeader (named)");
+      } else if (ChannelHeaderDisplayName) {
+        unpatch = after("default", ChannelHeaderDisplayName, patchCallback);
+        showToast("VoiceTime: Patched ChannelHeader (display name)");
+      } else {
+        console.log("[voiceTime] Could not find ChannelHeader");
+        showToast("VoiceTime: Could not find ChannelHeader");
+      }
+    } catch (e) {
+      console.error("VoiceTime Error:", e);
+      showToast(`VoiceTime Error: ${e.message}`);
     }
   },
 
