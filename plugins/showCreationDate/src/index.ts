@@ -9,15 +9,15 @@ const DISCORD_EPOCH = 1420070400000n;
 
 const UserProfileSection = findByDisplayName("UserProfileSection");
 
-let unpatch;
+let unpatch: () => void;
 
-function getCreationDate(userId) {
+function getCreationDate(userId: string) {
   const id = BigInt(userId);
   const timestamp = Number((id >> 22n) + DISCORD_EPOCH);
   return new Date(timestamp);
 }
 
-function formatDate(date) {
+function formatDate(date: Date) {
   return date.toLocaleDateString(i18n.getLocale(), {
     year: "numeric",
     month: "long",
@@ -27,7 +27,7 @@ function formatDate(date) {
 
 export default {
   onLoad() {
-    unpatch = after("default", UserProfileSection, (args, res) => {
+    unpatch = after("default", UserProfileSection, (_args: any, res: any) => {
       if (!res?.props) return res;
 
       const user = res.props.user;
@@ -38,12 +38,19 @@ export default {
 
       const existingChildren = React.Children.toArray(res.props.children);
 
-      res.props.children = [
-        ...existingChildren,
-        <Text style={{ color: "#B5BAC1", fontSize: 12, marginTop: 8 }}>
-          {formatted}
-        </Text>,
-      ];
+      const element = React.createElement(
+        Text,
+        {
+          style: {
+            color: "#B5BAC1",
+            fontSize: 12,
+            marginTop: 8,
+          },
+        },
+        formatted
+      );
+
+      res.props.children = [...existingChildren, element];
 
       return res;
     });
