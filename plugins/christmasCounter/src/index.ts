@@ -12,16 +12,18 @@ const getDaysToChristmas = () => {
   return Math.floor(difference / (1000 * 60 * 60 * 24));
 };
 
-
 export default {
   onLoad() {
-    const now = new Date();
-    const currentDate = now.toISOString().slice(0, 10);
+    
+    setTimeout(() => {
+      const now = new Date();
+      const currentDate = now.toISOString().slice(0, 10);
 
-    if (storage.lastShown !== currentDate) {
-      const days = getDaysToChristmas();
-      showToast(`Only ${days} days until Christmas! 🎁`);
-      storage.lastShown = currentDate;
-    }
+      if (storage.lastShown !== currentDate) {
+        const days = getDaysToChristmas();
+        showToast(`Only ${days} days until Christmas! 🎁`);
+        storage.lastShown = currentDate;
+      }
+    }, 1200); // 1.2 seconds ensures UI is ready
   },
 };
