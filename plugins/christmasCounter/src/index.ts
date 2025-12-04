@@ -7,6 +7,8 @@ storage.christmasDay ??= 24;
 
 const getDaysToChristmas = () => {
   const now = new Date();
+
+  
   const targetDay = storage.christmasDay;
 
   let christmas = new Date(now.getFullYear(), 11, targetDay);
