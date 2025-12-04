@@ -1,6 +1,6 @@
 import { storage } from "@vendetta/plugin";
 import { showToast } from "@vendetta/ui/toasts";
-
+import Settings from "./Settings";
 
 storage.lastShown ??= null;
 storage.christmasDay ??= 24;
@@ -29,6 +29,6 @@ export default {
       }
     }, 1200);
   },
-
+    settings: Settings,
 
 };
