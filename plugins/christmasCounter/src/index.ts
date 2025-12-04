@@ -10,7 +10,9 @@ const getDaysToChristmas = () => {
   const targetDay = storage.christmasDay;
 
   let christmas = new Date(now.getFullYear(), 11, targetDay);
-  if (now > christmas) christmas.setFullYear(now.getFullYear() + 1);
+  if (now > christmas) {
+    christmas.setFullYear(now.getFullYear() + 1);
+  }
 
   const difference = christmas.getTime() - now.getTime();
   return Math.floor(difference / (1000 * 60 * 60 * 24));
@@ -29,6 +31,6 @@ export default {
       }
     }, 1200);
   },
-    settings: Settings,
 
+  settings: Settings,
 };
