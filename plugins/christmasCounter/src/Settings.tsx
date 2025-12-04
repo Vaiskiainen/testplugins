@@ -1,4 +1,4 @@
-import { React } from "@vendetta/metro";
+import { React } from "@vendetta/metro/common";
 import { storage } from "@vendetta/plugin";
 import { Forms } from "@vendetta/ui/components";
 
