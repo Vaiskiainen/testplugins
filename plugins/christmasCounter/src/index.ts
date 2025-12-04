@@ -3,7 +3,7 @@ import { showToast } from "@vendetta/ui/toasts";
 import Settings from "./Settings";
 
 storage.lastShown ??= null;
-storage.christmasDay ??= 24; 
+storage.christmasDay ??= 25; 
 
 const getDaysToChristmas = () => {
   const now = new Date();
