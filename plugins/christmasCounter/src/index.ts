@@ -1,11 +1,16 @@
 import { storage } from "@vendetta/plugin";
 import { showToast } from "@vendetta/ui/toasts";
+import Settings from "./Settings";
 
-const getDaysToChristmas = () => {
+storage.christmasDay ??= 24; 
+storage.lastShown ??= null;
+
+const getDaysToChristmas = (): number => {
   const now = new Date();
-  
 
-  let christmas = new Date(now.getFullYear(), 11, 24);
+  const targetDay = storage.christmasDay;
+
+  const christmas = new Date(now.getFullYear(), 11, targetDay);
 
 
   if (now > christmas) {
@@ -23,8 +28,12 @@ export default {
 
     if (storage.lastShown !== currentDate) {
       const days = getDaysToChristmas();
-      showToast(`Only ${days} days until Christmas Eve! 🎁`);
+      showToast(
+        `Only ${days} days until Christmas! 🎁`
+      );
       storage.lastShown = currentDate;
     }
   },
+
+  settings: Settings,
 };
