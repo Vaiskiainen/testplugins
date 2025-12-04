@@ -1,4 +1,4 @@
-import { React } from "@vendetta/metro/common";
+import { React } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
 import { Forms } from "@vendetta/ui/components";
 
@@ -10,17 +10,18 @@ export default () => {
   return (
     <>
       <FormRow
-        label="Count towards the 25th instead of 24th"
-        subLabel="Some countries celebrate Christmas on the 24th, others on the 25th."
-      >
-        <FormSwitch
-          value={use25th}
-          onValueChange={(v) => {
-            setUse25th(v);
-            storage.christmasDay = v ? 25 : 24;
-          }}
-        />
-      </FormRow>
+        label="Count towards the 25th"
+        subLabel="Enable to count Christmas as December 25 instead of 24."
+        trailing={
+          <FormSwitch
+            value={use25th}
+            onValueChange={(v) => {
+              setUse25th(v);
+              storage.christmasDay = v ? 25 : 24;
+            }}
+          />
+        }
+      />
     </>
   );
 };
