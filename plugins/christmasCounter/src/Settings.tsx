@@ -21,6 +21,11 @@ export default () => {
             }}
           />
         }
+        onPress={() => {
+          const newValue = !use25th;
+          setUse25th(newValue);
+          storage.christmasDay = newValue ? 25 : 24;
+        }}
       />
     </>
   );
