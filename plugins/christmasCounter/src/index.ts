@@ -19,18 +19,19 @@ const getDaysToChristmas = (): number => {
 
 export default {
   onLoad() {
-    const now = new Date();
-    const currentDate = now.toISOString().slice(0, 10);
+    setTimeout(() => {
+      const now = new Date();
+      const currentDate = now.toISOString().slice(0, 10);
 
-    if (storage.lastShown !== currentDate) {
-      const days = getDaysToChristmas();
-      showToast(
-        `Only ${days} days until Christmas (counting to Dec ${storage.christmasDay})! 🎁`
-      );
-      storage.lastShown = currentDate;
-    }
+      if (storage.lastShown !== currentDate) {
+        const days = getDaysToChristmas();
+        showToast(
+          `Only ${days} days until Christmas (counting to Dec ${storage.christmasDay})! 🎁`
+        );
+        storage.lastShown = currentDate;
+      }
+    }, 1000);
   },
-
 
   settings: Settings,
 };
