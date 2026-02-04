@@ -6,7 +6,6 @@ import { showToast } from "@vendetta/ui/toasts";
 
 const { Pressable, ScrollView, View, Text } = ReactNative;
 
-// Find the Forms module (broader props match to increase chance of finding it)
 const Forms = UiForms || findByProps(
   "FormSection",
   "FormRow",
@@ -33,7 +32,7 @@ export default function Settings() {
   const targetLabel = countOn25th ? "Christmas Day" : "Christmas Eve";
   const days = getDaysToChristmas(targetDay);
 
-  // Fallback if native components fail to load
+
   if (!FormSection || !FormRow || !FormSwitchRow) {
     return (
       <View style={{ flex: 1, padding: 16, justifyContent: "center", alignItems: "center" }}>
