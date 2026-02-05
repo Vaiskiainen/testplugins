@@ -1,0 +1,14 @@
+{
+    "name": "Animal Commands",
+    "description": "Adds multiple animal image commands.",
+    "authors": [
+        {
+            "name": "Vaiskiainen",
+            "id": "1205851726586970125"
+        }
+    ],
+    "main": "src/index.ts",
+    "vendetta": {
+        "icon": "wumpus-wump"
+    }
+}
