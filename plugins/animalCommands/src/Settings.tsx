@@ -217,7 +217,7 @@ export default function Settings() {
         padding
       >
         <ThemedText>
-          Found a bug or want an animal added? DM @vaiskiainen.
+          Found a bug or want an animal added? DM "@vaiskiainen."
         </ThemedText>
       </BetterTableRowGroup>
     </>
