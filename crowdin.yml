@@ -1,0 +1,6 @@
+project_id: "animalcommands"
+api_token_env: CROWDIN_PERSONAL_TOKEN
+
+files:
+  - source: /plugins/animalCommands/lang/en.json
+    translation: /plugins/animalCommands/lang/%two_letters_code%.json

@@ -3,6 +3,7 @@ import { findByProps } from "@vendetta/metro";
 import { storage } from "@vendetta/plugin";
 import { showToast } from "@vendetta/ui/toasts";
 import Settings from "./Settings";
+import i18n from "./i18n";
 import {
   ensureApiDefaults,
   ensureCommandDefaults,
@@ -13,6 +14,9 @@ import {
 
 const CommandType = { CHAT: 1 } as const;
 const CommandInputType = { BUILT_IN: 1 } as const;
+
+const logWarn = (...args: any[]) => console.warn("[AnimalCommands]", ...args);
+const formatError = (err: any) => err?.message || String(err);
 
 const getMessageActions = () => {
   const g = (globalThis as any);
@@ -135,19 +139,20 @@ const registerAll = () => {
   unregisters = enabled.map((animal) =>
     registerCommand({
       name: animal.name,
-      description: animal.description,
-      displayName: animal.displayName,
-      displayDescription: animal.description,
+      description: i18n.t(animal.description),
+      displayName: i18n.t(animal.displayName),
+      displayDescription: i18n.t(animal.description),
+      options: [],
       applicationId: "-1",
       id: animal.id,
       inputType: CommandInputType.BUILT_IN,
       type: CommandType.CHAT,
-        execute: async (_args, ctx) => {
-          try {
-            if (!isCommandEnabled(storage, animal)) {
-              showToast("That command is disabled in settings.");
-              return null;
-            }
+      execute: async (_args, ctx) => {
+        try {
+          if (!isCommandEnabled(storage, animal)) {
+            showToast(i18n.t("toasts.command_disabled"));
+            return null;
+          }
 
           const api = getSelectedApi(storage, animal);
           if (api.directUrl) {
@@ -174,14 +179,14 @@ const registerAll = () => {
           }
 
           if (!api.endpoint || !api.parse) {
-            showToast("This API is not configured correctly.");
+            showToast(i18n.t("toasts.api_misconfigured"));
             return null;
           }
 
           const data = await fetchJson(api.endpoint);
           const parsed = api.parse(data);
           if (!parsed.url) {
-            showToast("API returned no image. Try another source.");
+            showToast(i18n.t("toasts.no_image"));
             return null;
           }
 
@@ -189,12 +194,12 @@ const registerAll = () => {
           const payload = `${caption}${parsed.url}`;
           return await deliverContent(ctx, payload);
         } catch (err) {
-          showToast("Failed to fetch animal image.");
+          showToast(i18n.t("toasts.fetch_failed"));
           return null;
         }
       },
-      })
-    );
+    })
+  );
 };
 
 export default {
@@ -212,7 +217,7 @@ export default {
     unregisterAll();
     try {
       delete (globalThis as any).__animalCommandsReload;
-    } catch {}
+    } catch { }
   },
 
   settings: Settings,

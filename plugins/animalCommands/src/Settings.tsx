@@ -13,6 +13,7 @@ import {
 } from "./animalData";
 import Header from "./components/Header";
 import BetterTableRowGroup from "./components/BetterTableRowGroup";
+import i18n from "./i18n";
 
 const { ScrollView, View, Text, Animated, Easing } = ReactNative;
 
@@ -117,7 +118,7 @@ export default function Settings() {
     return () => {
       try {
         delete (globalThis as any).__animalCommandsRefreshSettings;
-      } catch {}
+      } catch { }
     };
   }, []);
 
@@ -169,10 +170,10 @@ export default function Settings() {
     return (
       <View style={{ flex: 1, padding: 16, justifyContent: "center", alignItems: "center" }}>
         <Text style={{ fontSize: 18, fontWeight: "600", textAlign: "center" }}>
-          Failed to load native settings UI
+          {i18n.t("settings.errors.failed_ui")}
         </Text>
         <Text style={{ marginTop: 6, fontSize: 15, textAlign: "center" }}>
-          Update your Revenge/Vendetta build and try again.
+          {i18n.t("settings.errors.update_vendetta")}
         </Text>
       </View>
     );
@@ -183,7 +184,7 @@ export default function Settings() {
       <Header />
 
       <BetterTableRowGroup
-        title="Animals"
+        title={i18n.t("settings.groups.animals")}
         icon={pickIcon("SendMessageIcon", "ic_pets_24px", "ic_account_circle_24px")}
       >
         {animals.map((animal) => {
@@ -192,8 +193,8 @@ export default function Settings() {
           return (
             <FormRow
               key={animal.id}
-              label={animal.displayName}
-              subLabel={`API: ${selectedApi.name}`}
+              label={i18n.t(animal.displayName)}
+              subLabel={i18n.t("settings.items.api_label", { apiName: i18n.t(selectedApi.name) })}
               leading={renderLeadingIcon()}
               trailing={
                 <ReactNative.View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -213,12 +214,12 @@ export default function Settings() {
       </BetterTableRowGroup>
 
       <BetterTableRowGroup
-        title="Note"
+        title={i18n.t("settings.groups.note")}
         icon={pickIcon("ic_info_24px", "SettingsIcon")}
         padding
       >
         <ThemedText>
-          Found a bug or want an animal added? DM "@vaiskiainen."
+          {i18n.t("settings.items.note_text")}
         </ThemedText>
       </BetterTableRowGroup>
 
@@ -235,7 +236,7 @@ export default function Settings() {
     return (
       <>
         <BetterTableRowGroup
-          title={animal.displayName}
+          title={i18n.t(animal.displayName)}
           icon={pickIcon("ic_pets_24px", "ic_account_circle_24px")}
           padding
         >
@@ -253,8 +254,8 @@ export default function Settings() {
               return (
                 <RadioRow
                   key={api.id}
-                  label={api.name}
-                  subLabel={api.description}
+                  label={i18n.t(api.name)}
+                  subLabel={i18n.t(api.description)}
                   selected={isSelected}
                   leading={renderLeadingIcon()}
                   onPress={() => setApiChoice(animal.id, api.id)}
@@ -263,13 +264,13 @@ export default function Settings() {
             }
 
             const subLabel = isSelected
-              ? `Selected · ${api.description}`
-              : api.description;
+              ? i18n.t("settings.items.selected_api", { apiDescription: i18n.t(api.description) })
+              : i18n.t(api.description);
 
             return (
               <FormRow
                 key={api.id}
-                label={api.name}
+                label={i18n.t(api.name)}
                 subLabel={subLabel}
                 leading={renderLeadingIcon()}
                 onPress={() => setApiChoice(animal.id, api.id)}
@@ -279,11 +280,11 @@ export default function Settings() {
         </BetterTableRowGroup>
 
         <BetterTableRowGroup
-          title="Navigation"
+          title={i18n.t("settings.groups.navigation")}
           icon={pickIcon("ic_keyboard_arrow_left_24px", "XIcon")}
         >
           <FormRow
-            label="Back to animals"
+            label={i18n.t("settings.items.back_to_animals")}
             leading={renderBackIcon()}
             onPress={() => setSelectedAnimalId(null)}
           />
@@ -295,9 +296,9 @@ export default function Settings() {
   const translateX =
     containerWidth > 0
       ? slideAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, -containerWidth],
-        })
+        inputRange: [0, 1],
+        outputRange: [0, -containerWidth],
+      })
       : 0;
 
   return (

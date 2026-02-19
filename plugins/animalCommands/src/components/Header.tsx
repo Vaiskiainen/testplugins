@@ -8,6 +8,7 @@ import { semanticColors } from "@vendetta/ui";
 import { getAssetIDByName } from "@vendetta/ui/assets";
 import { showToast } from "@vendetta/ui/toasts";
 import { findByProps } from "@vendetta/metro";
+import i18n from "../i18n";
 
 export default function Header() {
   const [clickCounter, setClickCounter] = React.useState(0);
@@ -141,17 +142,21 @@ export default function Header() {
     }
   }, [currentUser]);
 
-const handleAvatarPress = () => {
-  if (storage.hiddenSettings?.enabled) {
-    storage.hiddenSettings.visible = !storage.hiddenSettings.visible;
-    showToast(
-      `Hidden settings ${storage.hiddenSettings.visible ? "visible" : "hidden"}`,
-      getAssetIDByName("SettingsIcon"),
-    );
-    const refresh = (globalThis as any).__animalCommandsRefreshSettings;
-    if (typeof refresh === "function") refresh();
-    return;
-  }
+  const handleAvatarPress = () => {
+    if (storage.hiddenSettings?.enabled) {
+      storage.hiddenSettings.visible = !storage.hiddenSettings.visible;
+      showToast(
+        i18n.t("toasts.hidden_settings_status", {
+          status: storage.hiddenSettings.visible
+            ? i18n.t("ui.status.visible")
+            : i18n.t("ui.status.hidden"),
+        }),
+        getAssetIDByName("SettingsIcon"),
+      );
+      const refresh = (globalThis as any).__animalCommandsRefreshSettings;
+      if (typeof refresh === "function") refresh();
+      return;
+    }
 
     if (clickTimeout) {
       clearTimeout(clickTimeout);
@@ -169,16 +174,16 @@ const handleAvatarPress = () => {
       return;
     }
 
-  showToast("Hidden settings unlocked!", getAssetIDByName("CheckmarkIcon"));
-  storage.hiddenSettings = {
-    ...storage.hiddenSettings,
-    enabled: true,
-    visible: true,
+    showToast(i18n.t("toasts.hidden_settings_unlocked"), getAssetIDByName("CheckmarkIcon"));
+    storage.hiddenSettings = {
+      ...storage.hiddenSettings,
+      enabled: true,
+      visible: true,
+    };
+    const refresh = (globalThis as any).__animalCommandsRefreshSettings;
+    if (typeof refresh === "function") refresh();
+    setClickCounter(0);
   };
-  const refresh = (globalThis as any).__animalCommandsRefreshSettings;
-  if (typeof refresh === "function") refresh();
-  setClickCounter(0);
-};
 
   return (
     <RN.View style={styles.container}>
@@ -212,9 +217,9 @@ const handleAvatarPress = () => {
         </RN.Pressable>
 
         <RN.View style={styles.textContainer}>
-          <RN.Text style={styles.title}>Commands</RN.Text>
+          <RN.Text style={styles.title}>{i18n.t("settings.header.title")}</RN.Text>
           <RN.Text style={styles.subtitle}>
-            Cool animal images with slash commands
+            {i18n.t("settings.header.subtitle")}
           </RN.Text>
         </RN.View>
       </RN.View>
