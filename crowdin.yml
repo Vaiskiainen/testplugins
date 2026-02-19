@@ -1,6 +1,12 @@
-project_id: "animalcommands"
+project_id: "testplugins"
 api_token_env: CROWDIN_PERSONAL_TOKEN
 
-files:
-  - source: /plugins/animalCommands/lang/en.json
-    translation: /plugins/animalCommands/lang/%two_letters_code%.json
+bundles:
+  - name: "animalCommands"
+    format: "json"
+    source_language: "en"
+    
+    export_pattern: "/plugins/animalCommands/lang/%two_letters_code%.json"
+    
+    content:
+      - "/*" 
