@@ -12,7 +12,7 @@ import {
 } from "./animalData";
 
 const CommandType = { CHAT: 1 } as const;
-const CommandInputType = { BUILT_IN: 0 } as const;
+const CommandInputType = { BUILT_IN: 1 } as const;
 
 const getMessageActions = () => {
   const g = (globalThis as any);
@@ -26,7 +26,10 @@ const getMessageActions = () => {
   return null;
 };
 
-const sendMessageAggressive = (channelId: string, content: string): { ok: boolean; method?: string } => {
+const sendMessageAggressive = async (
+  channelId: string,
+  content: string
+): Promise<{ ok: boolean; method?: string }> => {
   const MA = getMessageActions();
   if (!MA) return { ok: false };
 
@@ -49,9 +52,11 @@ const sendMessageAggressive = (channelId: string, content: string): { ok: boolea
   for (const attempt of attempts) {
     try {
       const res = attempt.fn();
-      if (res !== undefined) return { ok: true, method: attempt.name };
-    } catch {
-
+      if (res && typeof (res as any).then === "function") {
+        await res;
+      }
+      return { ok: true, method: attempt.name };
+    } catch (err) {
     }
   }
 
@@ -82,9 +87,10 @@ const fetchFinalUrl = async (url: string, timeoutMs = 8000): Promise<string> => 
       redirect: "follow",
       signal: headController.signal,
     });
-    if (res.ok && res.url) return res.url;
+    if (res.ok && res.url) {
+      return res.url;
+    }
   } catch {
-
   } finally {
     clearTimeout(headTimeoutId);
   }
@@ -104,21 +110,13 @@ const fetchFinalUrl = async (url: string, timeoutMs = 8000): Promise<string> => 
 
   return url;
 };
-const deliverContent = (ctx: any, content: string) => {
-  try {
-    if (ctx?.interaction && typeof ctx.interaction.respond === "function") {
-      ctx.interaction.respond({ type: 4, data: { content } });
-      return null;
-    }
-  } catch {
+const deliverContent = async (ctx: any, content: string) => {
+  const channelId = ctx?.channel?.id ?? ctx?.channelId ?? ctx?.message?.channel_id;
 
+  if (channelId) {
+    const result = await sendMessageAggressive(channelId, content);
+    if (result.ok) return null;
   }
-
-  const channelId = ctx?.channel?.id;
-  if (!channelId) return { content };
-
-  const result = sendMessageAggressive(channelId, content);
-  if (result.ok) return null;
 
   return { content };
 };
@@ -132,18 +130,18 @@ const unregisterAll = () => {
 
 const registerAll = () => {
   unregisterAll();
-  unregisters = getAvailableAnimals(storage)
-    .filter((animal) => isCommandEnabled(storage, animal))
-    .map((animal) =>
-      registerCommand({
-        name: animal.name,
-        description: animal.description,
-        displayName: animal.displayName,
-        displayDescription: animal.description,
-        applicationId: "-1",
-        id: animal.id,
-        inputType: CommandInputType.BUILT_IN,
-        type: CommandType.CHAT,
+  const available = getAvailableAnimals(storage);
+  const enabled = available.filter((animal) => isCommandEnabled(storage, animal));
+  unregisters = enabled.map((animal) =>
+    registerCommand({
+      name: animal.name,
+      description: animal.description,
+      displayName: animal.displayName,
+      displayDescription: animal.description,
+      applicationId: "-1",
+      id: animal.id,
+      inputType: CommandInputType.BUILT_IN,
+      type: CommandType.CHAT,
         execute: async (_args, ctx) => {
           try {
             if (!isCommandEnabled(storage, animal)) {
@@ -151,50 +149,50 @@ const registerAll = () => {
               return null;
             }
 
-            const api = getSelectedApi(storage, animal);
-            if (api.directUrl) {
-              let finalUrl = api.directUrl;
-              if (api.cacheBust) {
-                try {
-                  const url = new URL(finalUrl);
-                  url.searchParams.set("t", Date.now().toString());
-                  finalUrl = url.toString();
-                } catch {
-
-                }
+          const api = getSelectedApi(storage, animal);
+          if (api.directUrl) {
+            let finalUrl = api.directUrl;
+            if (api.cacheBust) {
+              try {
+                const url = new URL(finalUrl);
+                url.searchParams.set("t", Date.now().toString());
+                finalUrl = url.toString();
+              } catch (err) {
+                logWarn("directUrl:cacheBust failed", animal.name, formatError(err));
               }
+            }
 
-              if (api.resolveFinalUrl) {
-                try {
-                  finalUrl = await fetchFinalUrl(finalUrl);
-                } catch {
-
-                }
+            if (api.resolveFinalUrl) {
+              try {
+                finalUrl = await fetchFinalUrl(finalUrl);
+              } catch (err) {
+                logWarn("directUrl:resolveFinalUrl failed", animal.name, formatError(err));
               }
-
-              return deliverContent(ctx, finalUrl);
             }
 
-            if (!api.endpoint || !api.parse) {
-              showToast("This API is not configured correctly.");
-              return null;
-            }
+            return await deliverContent(ctx, finalUrl);
+          }
 
-            const data = await fetchJson(api.endpoint);
-            const parsed = api.parse(data);
-            if (!parsed.url) {
-              showToast("API returned no image. Try another source.");
-              return null;
-            }
-
-            const caption = parsed.caption ? `${parsed.caption}\n` : "";
-            return deliverContent(ctx, `${caption}${parsed.url}`);
-          } catch (err) {
-            console.debug("[animalCommands] fetch failed", animal.name, err);
-            showToast("Failed to fetch animal image.");
+          if (!api.endpoint || !api.parse) {
+            showToast("This API is not configured correctly.");
             return null;
           }
-        },
+
+          const data = await fetchJson(api.endpoint);
+          const parsed = api.parse(data);
+          if (!parsed.url) {
+            showToast("API returned no image. Try another source.");
+            return null;
+          }
+
+          const caption = parsed.caption ? `${parsed.caption}\n` : "";
+          const payload = `${caption}${parsed.url}`;
+          return await deliverContent(ctx, payload);
+        } catch (err) {
+          showToast("Failed to fetch animal image.");
+          return null;
+        }
+      },
       })
     );
 };

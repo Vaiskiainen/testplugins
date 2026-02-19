@@ -133,6 +133,7 @@ export default function Settings() {
     if (typeof reload === "function") reload();
   };
 
+
   React.useEffect(() => {
     if (selectedAnimalId) {
       setActiveDetailId(selectedAnimalId);
@@ -220,6 +221,7 @@ export default function Settings() {
           Found a bug or want an animal added? DM "@vaiskiainen."
         </ThemedText>
       </BetterTableRowGroup>
+
     </>
   );
 
