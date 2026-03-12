@@ -1,6 +1,6 @@
 {
-    "name": "Animal Commands",
-    "description": "Adds multiple animal image commands.",
+    "name": "RelationshipNotifier",
+    "description": "Notifies you when you are unfriended, or removed from a group DM or server.",
     "authors": [
         {
             "name": "Vaiskiainen",
@@ -9,6 +9,6 @@
     ],
     "main": "src/index.ts",
     "vendetta": {
-        "icon": "wumpus-wump"
+        "icon": "ic_notif"
     }
 }
