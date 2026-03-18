@@ -33,6 +33,13 @@ const ThemedText = FormText ?? Text;
 const RadioRow = FormRadioRow ?? FormCheckRow ?? null;
 const FormRowIcon = (FormRow as any)?.Icon;
 
+const getApiName = (api: { name: string }) => api.name;
+
+const getApiDescription = (api: { description: string; noteKey?: string }) => {
+  const note = api.noteKey ? i18n.t(api.noteKey) : "";
+  return note ? `${api.description} ${note}` : api.description;
+};
+
 const pickIcon = (...names: string[]) => {
   for (const name of names) {
     const id = getAssetIDByName(name);
@@ -194,7 +201,7 @@ export default function Settings() {
             <FormRow
               key={animal.id}
               label={i18n.t(animal.displayName)}
-              subLabel={i18n.t("settings.items.api_label", { apiName: i18n.t(selectedApi.name) })}
+              subLabel={i18n.t("settings.items.api_label", { apiName: getApiName(selectedApi) })}
               leading={renderLeadingIcon()}
               trailing={
                 <ReactNative.View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -254,8 +261,8 @@ export default function Settings() {
               return (
                 <RadioRow
                   key={api.id}
-                  label={i18n.t(api.name)}
-                  subLabel={i18n.t(api.description)}
+                  label={getApiName(api)}
+                  subLabel={getApiDescription(api)}
                   selected={isSelected}
                   leading={renderLeadingIcon()}
                   onPress={() => setApiChoice(animal.id, api.id)}
@@ -264,13 +271,13 @@ export default function Settings() {
             }
 
             const subLabel = isSelected
-              ? i18n.t("settings.items.selected_api", { apiDescription: i18n.t(api.description) })
-              : i18n.t(api.description);
+              ? i18n.t("settings.items.selected_api", { apiDescription: getApiDescription(api) })
+              : getApiDescription(api);
 
             return (
               <FormRow
                 key={api.id}
-                label={i18n.t(api.name)}
+                label={getApiName(api)}
                 subLabel={subLabel}
                 leading={renderLeadingIcon()}
                 onPress={() => setApiChoice(animal.id, api.id)}

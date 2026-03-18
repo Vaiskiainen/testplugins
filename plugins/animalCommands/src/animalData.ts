@@ -13,6 +13,7 @@ export type ApiOption = {
   id: string;
   name: string;
   description: string;
+  noteKey?: string;
   endpoint?: string;
   parse?: (data: any) => AnimalResult;
   directUrl?: string;
@@ -79,15 +80,16 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "dog-ceo",
-        name: "apis.dog-ceo.name",
-        description: "apis.dog-ceo.description",
+        name: "Dog CEO",
+        description: "dog.ceo API",
         endpoint: "https://dog.ceo/api/breeds/image/random",
         parse: (data) => ({ url: typeof data?.message === "string" ? data.message : null }),
       },
       {
         id: "random-dog",
-        name: "apis.random-dog.name",
-        description: "apis.random-dog.description",
+        name: "Random Dog",
+        description: "random.dog",
+        noteKey: "api_notes.filters_non_images",
         endpoint: "https://random.dog/woof.json",
         parse: (data) => {
           const url = typeof data?.url === "string" ? data.url : null;
@@ -105,15 +107,15 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "thecatapi",
-        name: "apis.thecatapi.name",
-        description: "apis.thecatapi.description",
+        name: "The Cat API",
+        description: "thecatapi.com",
         endpoint: "https://api.thecatapi.com/v1/images/search",
         parse: (data) => ({ url: Array.isArray(data) && data[0]?.url ? data[0].url : null }),
       },
       {
         id: "cataas",
-        name: "apis.cataas.name",
-        description: "apis.cataas.description",
+        name: "Cataas",
+        description: "cataas.com",
         endpoint: "https://cataas.com/cat?json=true",
         parse: (data) => {
           const raw = typeof data?.url === "string" ? data.url : null;
@@ -133,15 +135,16 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "randomfox",
-        name: "apis.randomfox.name",
-        description: "apis.randomfox.description",
+        name: "RandomFox",
+        description: "randomfox.ca",
         endpoint: "https://randomfox.ca/floof/",
         parse: (data) => ({ url: typeof data?.image === "string" ? data.image : null }),
       },
       {
         id: "some-random-api",
-        name: "apis.some-random-api.name",
-        description: "apis.some-random-api.description",
+        name: "Some Random API",
+        description: "some-random-api.com",
+        noteKey: "api_notes.includes_fact",
         endpoint: "https://some-random-api.com/animal/fox",
         parse: (data) => ({
           url: typeof data?.image === "string" ? data.image : null,
@@ -159,15 +162,15 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "random-duck-v2",
-        name: "apis.random-duck-v2.name",
-        description: "apis.random-duck-v2.description",
+        name: "Random-d.uk v2",
+        description: "random-d.uk v2 API",
         endpoint: "https://random-d.uk/api/v2/random",
         parse: (data) => ({ url: typeof data?.url === "string" ? data.url : null }),
       },
       {
         id: "random-duck-v1",
-        name: "apis.random-duck-v1.name",
-        description: "apis.random-duck-v1.description",
+        name: "Random-d.uk v1",
+        description: "random-d.uk v1 API",
         endpoint: "https://random-d.uk/api/random",
         parse: (data) => ({ url: typeof data?.url === "string" ? data.url : null }),
       },
@@ -182,15 +185,15 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "shibe-online",
-        name: "apis.shibe-online.name",
-        description: "apis.shibe-online.description",
+        name: "Shibe.online",
+        description: "shibe.online API",
         endpoint: "https://shibe.online/api/shibes?count=1&urls=true&httpsUrls=true",
         parse: (data) => ({ url: Array.isArray(data) && typeof data[0] === "string" ? data[0] : null }),
       },
       {
         id: "dog-ceo-shiba",
-        name: "apis.dog-ceo-shiba.name",
-        description: "apis.dog-ceo-shiba.description",
+        name: "Dog CEO (Shiba)",
+        description: "dog.ceo shiba endpoint",
         endpoint: "https://dog.ceo/api/breed/shiba/images/random",
         parse: (data) => ({ url: typeof data?.message === "string" ? data.message : null }),
       },
@@ -205,8 +208,8 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "animals-maxz-horse",
-        name: "apis.animals-maxz.name",
-        description: "apis.animals-maxz.description",
+        name: "Animals Maxz",
+        description: "animals.maxz.dev",
         endpoint: "https://animals.maxz.dev/api/horse/random",
         parse: parseAnimalsMaxz,
       },
@@ -221,8 +224,8 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "animals-maxz-deer",
-        name: "apis.animals-maxz.name",
-        description: "apis.animals-maxz.description",
+        name: "Animals Maxz",
+        description: "animals.maxz.dev",
         endpoint: "https://animals.maxz.dev/api/deer/random",
         parse: parseAnimalsMaxz,
       },
@@ -237,8 +240,9 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "tinyfox-otter",
-        name: "apis.tinyfox.name",
-        description: "apis.tinyfox.description",
+        name: "Tinyfox",
+        description: "api.tinyfox.dev",
+        noteKey: "api_notes.ott",
         endpoint: "https://api.tinyfox.dev/img.json?animal=ott",
         parse: parseTinyfox,
       },
@@ -253,8 +257,8 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "animals-maxz-bird",
-        name: "apis.animals-maxz.name",
-        description: "apis.animals-maxz.description",
+        name: "Animals Maxz",
+        description: "animals.maxz.dev",
         endpoint: "https://animals.maxz.dev/api/bird/random",
         parse: parseAnimalsMaxz,
       },
@@ -269,8 +273,8 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "animals-maxz-turtle",
-        name: "apis.animals-maxz.name",
-        description: "apis.animals-maxz.description",
+        name: "Animals Maxz",
+        description: "animals.maxz.dev",
         endpoint: "https://animals.maxz.dev/api/turtle/random",
         parse: parseAnimalsMaxz,
       },
@@ -285,8 +289,8 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "animals-maxz-sheep",
-        name: "apis.animals-maxz.name",
-        description: "apis.animals-maxz.description",
+        name: "Animals Maxz",
+        description: "animals.maxz.dev",
         endpoint: "https://animals.maxz.dev/api/sheep/random",
         parse: parseAnimalsMaxz,
       },
@@ -301,15 +305,15 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "capy-lol",
-        name: "apis.capy-lol.name",
-        description: "apis.capy-lol.description",
+        name: "Capy.lol",
+        description: "api.capy.lol",
         endpoint: "https://api.capy.lol/v1/capybara?json=true",
         parse: parseCapyLol,
       },
       {
         id: "animals-maxz-capybara",
-        name: "apis.animals-maxz.name",
-        description: "apis.animals-maxz.description",
+        name: "Animals Maxz",
+        description: "animals.maxz.dev",
         endpoint: "https://animals.maxz.dev/api/capybara/random",
         parse: parseAnimalsMaxz,
       },
@@ -325,8 +329,8 @@ export const ANIMALS: AnimalConfig[] = [
     apis: [
       {
         id: "commons-triceratops",
-        name: "apis.commons-triceratops.name",
-        description: "apis.commons-triceratops.description",
+        name: "Wikimedia Commons (CC0)",
+        description: "A cool dino :3",
         directUrl:
           "https://static01.nyt.com/images/2025/06/09/multimedia/09HS-tb-dinosaur-01-fvzp/09HS-tb-dinosaur-01-fvzp-videoSixteenByNine3000.jpg",
       },
