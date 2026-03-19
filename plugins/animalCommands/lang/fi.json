@@ -25,11 +25,11 @@
             "description": ""
         },
         "dog": {
-            "description": "",
+            "description": "Satunnainen koirakuva",
             "name": "koira"
         },
         "cat": {
-            "name": "",
+            "name": "Kissa",
             "description": ""
         },
         "deer": {
