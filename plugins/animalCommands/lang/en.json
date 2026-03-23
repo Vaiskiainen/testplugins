@@ -67,13 +67,16 @@
             "animals": "Animals",
             "note": "Note",
             "choose_api": "Choose API",
-            "navigation": "Navigation"
+            "navigation": "Navigation",
+            "localization": "Localization"
         },
         "items": {
             "api_label": "API: {{apiName}}",
             "note_text": "Found a bug or want an animal added? DM \"@vaiskiainen.\"",
             "selected_api": "Selected · {{apiDescription}}",
-            "back_to_animals": "Back to animals"
+            "back_to_animals": "Back to animals",
+            "localization_title": "Help us translate!",
+            "localization_description": "This plugin supports multiple languages. Help us improve translations and add new ones!"
         },
         "errors": {
             "failed_ui": "Failed to load native settings UI",

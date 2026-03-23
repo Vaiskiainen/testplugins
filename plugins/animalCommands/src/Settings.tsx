@@ -47,7 +47,6 @@ const pickIcon = (...names: string[]) => {
   }
   return undefined;
 };
-
 const imageIconId = pickIcon(
   "ic_image",
   "ic_image_24px",
@@ -97,6 +96,14 @@ const renderBackIcon = () => {
       style={{ width: 20, height: 20, tintColor: semanticColors.TEXT_MUTED }}
     />
   );
+};
+
+const openTranslationLink = () => {
+  const url = "https://translate.codeberg.org/projects/testplugins/animalcommands/";
+  const Linking = ReactNative.Linking;
+  Linking?.openURL?.(url).catch(() => {
+    console.log("Failed to open translation URL");
+  });
 };
 
 export default function Settings() {
@@ -230,6 +237,29 @@ export default function Settings() {
         </ThemedText>
       </BetterTableRowGroup>
 
+      <BetterTableRowGroup
+        title={i18n.t("settings.groups.localization")}
+        icon={pickIcon("ic_language_24px", "ic_translate_24px", "LanguageIcon")}
+        padding
+      >
+        <ThemedText style={{ marginBottom: 12 }}>
+          {i18n.t("settings.items.localization_description")}
+        </ThemedText>
+        <ReactNative.Pressable
+          onPress={openTranslationLink}
+          style={({ pressed }) => ({
+            backgroundColor: semanticColors.BRAND_500 || "#5865F2",
+            paddingHorizontal: 16,
+            paddingVertical: 10,
+            borderRadius: 8,
+            opacity: pressed ? 0.8 : 1,
+          })}
+        >
+          <Text style={{ color: "#FFFFFF", fontWeight: "600", textAlign: "center" }}>
+            {i18n.t("settings.items.localization_title")}
+          </Text>
+        </ReactNative.Pressable>
+      </BetterTableRowGroup>
     </>
   );
 
