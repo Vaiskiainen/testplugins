@@ -1,6 +1,10 @@
 # Testplugins
 My personal plugins for vendetta like clients.
 
+<a href="https://translate.codeberg.org/engage/testplugins/">
+<img src="https://translate.codeberg.org/widget/testplugins/animalcommands/svg-badge.svg" alt="Translation status" />
+</a>
+
 ## Current plugins
 1. Animal commands.
 2. Christmas counter

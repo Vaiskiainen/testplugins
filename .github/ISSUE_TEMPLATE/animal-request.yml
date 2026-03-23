@@ -1,0 +1,21 @@
+name: Animal request
+description: Request an animal to be added
+title: "[ANIMAL]: "
+labels: ["animal request"]
+assignees:
+  - Vaiskiainen
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please provide the following information about the animal you want to be added:
+
+  - type: textarea
+    id: animal-name
+    attributes:
+      label: Animal Name
+      description: What is the name of the animal you want to be added?
+      placeholder: "e.g. Dog"
+    validations:
+      required: true
