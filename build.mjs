@@ -29,6 +29,7 @@ function parseReadme(content) {
 }
 
 const extensions = [".js", ".jsx", ".mjs", ".ts", ".tsx", ".cts", ".mts"];
+const pluginPages = [];
 
 /** @type import("rollup").InputPluginOption */
 const plugins = [
@@ -112,6 +113,12 @@ for (let plug of await readdir("./plugins")) {
             await writeFile(`./dist/${plug}/index.md`, content);
         }
 
+        pluginPages.push({
+            slug: plug,
+            name: manifest.name,
+            description: manifest.description || "",
+        });
+
         console.log(`Successfully built ${manifest.name}!`);
     } catch (e) {
         console.error("Failed to build plugin...", e);
@@ -119,39 +126,17 @@ for (let plug of await readdir("./plugins")) {
     }
 }
 
+await mkdir('./dist/plugins', { recursive: true });
+const pluginsList = pluginPages
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((plugin) => `- [${plugin.name}](../${plugin.slug}/)${plugin.description ? ` - ${plugin.description}` : ""}`)
+    .join('\n');
+const pluginsIndex = `---\nlayout: page\ntitle: "Plugins"\n---\n# Plugins\n\n${pluginsList}\n`;
+await writeFile('./dist/plugins/index.md', pluginsIndex);
+
+const homeIndex = `---\nlayout: page\ntitle: "Testplugins"\n---\n# Testplugins\n\nPersonal plugins for Vendetta-like clients.\n\n- Browse all plugins: [plugins](./plugins/)\n- Project wiki: [wiki](https://github.com/Vaiskiainen/testplugins/wiki)\n`;
+await writeFile('./dist/index.md', homeIndex);
+
 await mkdir('./dist/_layouts', { recursive: true });
-await writeFile('./dist/_layouts/page.html', `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ page.title | default: site.title }}</title>
-{% if page.og_title %}<meta property="og:title" content="{{ page.og_title }}">{% endif %}
-{% if page.og_description %}<meta property="og:description" content="{{ page.og_description }}">{% endif %}
-{% if page.og_image %}<meta property="og:image" content="{{ page.og_image }}">{% endif %}
-{% if page.og_url %}<meta property="og:url" content="{{ page.og_url }}">{% endif %}
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Testplugins">
-{% if page.twitter_card %}<meta name="twitter:card" content="{{ page.twitter_card }}">{% endif %}
-{% if page.twitter_title %}<meta name="twitter:title" content="{{ page.twitter_title }}">{% endif %}
-{% if page.twitter_description %}<meta name="twitter:description" content="{{ page.twitter_description }}">{% endif %}
-{% if page.twitter_image %}<meta name="twitter:image" content="{{ page.twitter_image }}">{% endif %}
-{% if page.theme_color %}<meta name="theme-color" content="{{ page.theme_color }}">{% endif %}
-{% if page.author %}<meta name="author" content="{{ page.author }}">{% endif %}
-<style>
-    body {font-family: Inter, Helvetica, Arial, sans-serif; margin: 0; background: #ffffff; color: #111827; line-height: 1.65;}
-    .page-wrapper {max-width: 900px; margin: 0 auto; padding: 2.25rem 1.5rem 2.5rem;}
-    .card {background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 10px 24px rgba(15,23,42,0.08); padding: 1.4rem;}
-    h1 {margin-top: 0; font-size: 2rem; color: #111827;}
-    h2 {color: #1f2937; margin-top: 1.5rem;}
-    p, li {font-size: 1rem;}
-    a {color: #059669; text-decoration: none;}
-    a:hover {text-decoration: underline;}
-</style>
-</head>
-<body>
-<div class="page-wrapper"><div class="card">
-{{ content }}
-</div></div>
-</body>
-</html>`);
+const layoutHtml = await readFile('./site/page.html', 'utf8');
+await writeFile('./dist/_layouts/page.html', layoutHtml);
