@@ -1,6 +1,6 @@
 import { storage } from "@vendetta/plugin";
 import { showToast } from "@vendetta/ui/toasts";
-import Settings from "./Settings";  // adjust path if needed, assuming same folder
+import Settings from "./Settings";  
 
 export const getDaysToChristmas = () => {
   const now = new Date();
@@ -15,15 +15,15 @@ export const getDaysToChristmas = () => {
 export default {
   onLoad() {
     const now = new Date();
-    const currentDate = now.toISOString().slice(0, 10);  // YYYY-MM-DD
+    const currentDate = now.toISOString().slice(0, 10);
 
-    // storage is a persistent proxy object; it auto-saves changes
+
     if (storage.lastShown !== currentDate) {
       const days = getDaysToChristmas();
       showToast(`Only ${days} days until Christmas Eve! 🎁`);
-      storage.lastShown = currentDate;  // this persists across reloads/enables
+      storage.lastShown = currentDate;  
     }
   },
 
-  settings: Settings,  // lowercase "settings" key, points to the component
+  settings: Settings,  
 };
