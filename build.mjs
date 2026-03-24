@@ -138,8 +138,20 @@ await writeFile('./dist/_layouts/page.html', `<!DOCTYPE html>
 {% if page.twitter_image %}<meta name="twitter:image" content="{{ page.twitter_image }}">{% endif %}
 {% if page.theme_color %}<meta name="theme-color" content="{{ page.theme_color }}">{% endif %}
 {% if page.author %}<meta name="author" content="{{ page.author }}">{% endif %}
+<style>
+    body {font-family: Inter, Helvetica, Arial, sans-serif; margin: 0; background: #ffffff; color: #111827; line-height: 1.65;}
+    .page-wrapper {max-width: 900px; margin: 0 auto; padding: 2.25rem 1.5rem 2.5rem;}
+    .card {background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 10px 24px rgba(15,23,42,0.08); padding: 1.4rem;}
+    h1 {margin-top: 0; font-size: 2rem; color: #111827;}
+    h2 {color: #1f2937; margin-top: 1.5rem;}
+    p, li {font-size: 1rem;}
+    a {color: #059669; text-decoration: none;}
+    a:hover {text-decoration: underline;}
+</style>
 </head>
 <body>
+<div class="page-wrapper"><div class="card">
 {{ content }}
+</div></div>
 </body>
 </html>`);
