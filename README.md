@@ -7,7 +7,7 @@ My personal plugins for vendetta like clients.
 
 ## Current plugins
 <div>
-https://img.shields.io/badge/Animal%20Commands-brightgreen?style=for-the-badge
+<img src=https://img.shields.io/badge/Animal%20Commands-brightgreen?style=for-the-badge></img>
 </div>
 2. Christmas counter
 3. RemoveBanner
