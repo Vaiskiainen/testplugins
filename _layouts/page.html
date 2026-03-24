@@ -17,7 +17,12 @@
 {% if page.theme_color %}<meta name="theme-color" content="{{ page.theme_color }}">{% endif %}
 {% if page.author %}<meta name="author" content="{{ page.author }}">{% endif %}
 <style>
-    body {font-family: Inter, Helvetica, Arial, sans-serif; margin: 0; background: #ffffff; color: #111827; line-height: 1.65;}
+    body {font-family: Inter, Helvetica, Arial, sans-serif; margin: 0; background: #f8fafc; color: #111827; line-height: 1.65;}
+    .site-header {background: #ffffff; border-bottom: 1px solid #e5e7eb;}
+    .nav-inner {max-width: 900px; margin: 0 auto; padding: 0.9rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;}
+    .nav-links {display: flex; gap: 1rem; flex-wrap: wrap;}
+    .nav-links a {color: #111827; font-weight: 600; text-decoration: none;}
+    .nav-links a:hover {color: #059669; text-decoration: underline;}
     .page-wrapper {max-width: 900px; margin: 0 auto; padding: 2.25rem 1.5rem 2.5rem;}
     .card {background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 10px 24px rgba(15,23,42,0.08); padding: 1.4rem;}
     h1 {margin-top: 0; font-size: 2rem; color: #111827;}
@@ -28,6 +33,23 @@
 </style>
 </head>
 <body>
+{% assign base = site.baseurl %}
+{% if base == nil or base == "" %}
+  {% if site.github.repository_name %}
+    {% assign base = "/" | append: site.github.repository_name %}
+  {% else %}
+    {% assign base = "" %}
+  {% endif %}
+{% endif %}
+<header class="site-header">
+  <div class="nav-inner">
+    <nav class="nav-links" aria-label="Primary">
+      <a href="{{ base }}/">home</a>
+      <a href="{{ base }}/plugins/">plugins</a>
+      <a href="https://github.com/Vaiskiainen/testplugins/wiki" target="_blank" rel="noopener">wiki</a>
+    </nav>
+  </div>
+</header>
 <div class="page-wrapper"><div class="card">
 {{ content }}
 </div></div>
