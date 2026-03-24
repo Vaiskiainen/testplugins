@@ -10,7 +10,7 @@
 <meta name="twitter:title" content="🎄 Christmas Counter" />
 <meta name="twitter:description" content="Countdown to Christmas every day!" />
 <meta name="twitter:image" content="" />
-<meta name="theme-color" content="#9fc957" />
+<meta name="theme-color" content="#c42116" />
 
 # Christmas Counter
 
