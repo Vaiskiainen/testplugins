@@ -10,7 +10,7 @@ og_site_name: "Testplugins"
 twitter_card: "summary"
 twitter_title: "🎄 Christmas Counter"
 twitter_description: "Countdown to Christmas every day!"
-theme_color: "#9fc957"
+theme_color: "#c42116"
 ---
 
 # Christmas Counter
