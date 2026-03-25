@@ -1,7 +1,7 @@
-import { readFile, writeFile, readdir } from "fs/promises";
+import { readFile, writeFile, readdir, copyFile } from "fs/promises";
 import { existsSync } from "fs";
 import { mkdir } from "fs/promises";
-import { extname } from "path";
+import { extname, join } from "path";
 import { createHash } from "crypto";
 
 import { rollup } from "rollup";
@@ -30,6 +30,54 @@ function parseReadme(content) {
 
 const extensions = [".js", ".jsx", ".mjs", ".ts", ".tsx", ".cts", ".mts"];
 const pluginPages = [];
+const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"]);
+
+function normalizeKey(value) {
+    return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+async function buildImageMap() {
+    const map = new Map();
+    if (!existsSync("./images")) return map;
+
+    const entries = await readdir("./images", { withFileTypes: true });
+    for (const entry of entries) {
+        if (!entry.isFile()) continue;
+        const ext = extname(entry.name).toLowerCase();
+        if (!imageExtensions.has(ext)) continue;
+
+        const base = entry.name.slice(0, -ext.length);
+        const key = normalizeKey(base);
+        if (!map.has(key)) {
+            map.set(key, entry.name);
+        }
+    }
+
+    return map;
+}
+
+async function copyDir(src, dest) {
+    if (!existsSync(src)) return;
+    await mkdir(dest, { recursive: true });
+    const entries = await readdir(src, { withFileTypes: true });
+    for (const entry of entries) {
+        const srcPath = join(src, entry.name);
+        const destPath = join(dest, entry.name);
+        if (entry.isDirectory()) {
+            await copyDir(srcPath, destPath);
+        } else if (entry.isFile()) {
+            await copyFile(srcPath, destPath);
+        }
+    }
+}
+
+const imageMap = await buildImageMap();
+
+function getLocalImageForPlugin(slug) {
+    const key = normalizeKey(slug);
+    const match = imageMap.get(key);
+    return match ? `images/${match}` : null;
+}
 
 /** @type import("rollup").InputPluginOption */
 const plugins = [
@@ -106,10 +154,25 @@ for (let plug of await readdir("./plugins")) {
         if (existsSync(readmePath)) {
             const content = await readFile(readmePath, 'utf8');
             const { front, body } = parseReadme(content);
-            const frontStr = Object.keys(front).length ? '---\nlayout: page\n' + Object.entries(front).map(([k,v]) => `${k}: "${v.replace(/"/g, '\\"')}"`).join('\n') + '\n---\n' : '---\nlayout: page\n---\n';
+            const localImage = getLocalImageForPlugin(plug);
+            if (!front.page_image && localImage) {
+                front.page_image = localImage;
+                front.page_image_alt = manifest.name;
+            } else if (!front.page_image && front.og_image) {
+                front.page_image = front.og_image;
+                front.page_image_alt = manifest.name;
+            }
+            front.commit_path = `plugins/${plug}`;
+            front.commit_repo = "Vaiskiainen/testplugins";
+
+            const frontStr = Object.keys(front).length
+                ? '---\nlayout: page\n' + Object.entries(front).map(([k,v]) => `${k}: "${String(v).replace(/"/g, '\\"')}"`).join('\n') + '\n---\n'
+                : '---\nlayout: page\n---\n';
             await writeFile(`./dist/${plug}/index.md`, frontStr + body);
         } else {
-            const content = `---\nlayout: page\ntitle: "${manifest.name}"\n---\n# ${manifest.name}\n\n${manifest.description}\n\n## Installation\n\nCopy the following link and paste it into the Plugins page of Vendetta:\n\nhttps://vaiskiainen.github.io/testplugins/${plug}\n\n## Authors\n\n${manifest.authors.map(a => `- **${a.name}**`).join('\n')}`;
+            const localImage = getLocalImageForPlugin(plug);
+            const imageFront = localImage ? `page_image: "${localImage}"\npage_image_alt: "${manifest.name.replace(/"/g, '\\"')}"\n` : "";
+            const content = `---\nlayout: page\ntitle: "${manifest.name.replace(/"/g, '\\"')}"\n${imageFront}commit_path: "plugins/${plug}"\ncommit_repo: "Vaiskiainen/testplugins"\n---\n# ${manifest.name}\n\n${manifest.description}\n\n## Installation\n\nCopy the following link and paste it into the Plugins page of Vendetta:\n\nhttps://vaiskiainen.github.io/testplugins/${plug}\n\n## Authors\n\n${manifest.authors.map(a => `- **${a.name}**`).join('\n')}`;
             await writeFile(`./dist/${plug}/index.md`, content);
         }
 
@@ -140,3 +203,5 @@ await writeFile('./dist/index.md', homeIndex);
 await mkdir('./dist/_layouts', { recursive: true });
 const layoutHtml = await readFile('./site/page.html', 'utf8');
 await writeFile('./dist/_layouts/page.html', layoutHtml);
+
+await copyDir("./images", "./dist/images");
