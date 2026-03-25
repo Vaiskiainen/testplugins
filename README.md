@@ -6,7 +6,9 @@ My personal plugins for vendetta like clients.
 </a>
 
 ## Current plugins
-1. Animal commands.
+<div align="center">
+<img src=https://img.shields.io/badge/Animal-Commands-brightgreen?style=for-the-badge></img>
+</div>
 2. Christmas counter
 3. RemoveBanner
 
