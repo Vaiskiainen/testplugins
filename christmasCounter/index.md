@@ -11,6 +11,10 @@ twitter_card: "summary"
 twitter_title: "🎄 Christmas Counter"
 twitter_description: "Countdown to Christmas every day!"
 theme_color: "#c42116"
+page_image: "images/christmasCounter.png"
+page_image_alt: "🎄 Christmas Counter"
+commit_path: "plugins/christmasCounter"
+commit_repo: "Vaiskiainen/testplugins"
 ---
 
 # Christmas Counter

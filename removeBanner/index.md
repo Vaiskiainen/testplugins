@@ -1,6 +1,8 @@
 ---
 layout: page
 title: "RemoveBanner"
+commit_path: "plugins/removeBanner"
+commit_repo: "Vaiskiainen/testplugins"
 ---
 # RemoveBanner
 
