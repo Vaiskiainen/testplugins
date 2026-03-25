@@ -1,6 +1,8 @@
 ---
 layout: page
 title: "Testplugins"
+page_image: "images/testplugins_promo.png"
+page_image_alt: "Testplugins promo"
 ---
 # Testplugins
 

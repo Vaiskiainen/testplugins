@@ -27,6 +27,8 @@
     .card {background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 10px 24px rgba(15,23,42,0.08); padding: 1.4rem;}
     .plugin-hero {margin-bottom: 1.35rem;}
     .plugin-hero img {width: 100%; max-height: 320px; object-fit: cover; border-radius: 12px; border: 1px solid #e5e7eb; display: block;}
+    .plugin-gallery {display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; margin: 1.4rem 0 0;}
+    .plugin-gallery img {width: 100%; height: 160px; object-fit: cover; border-radius: 10px; border: 1px solid #e5e7eb; display: block;}
     .commit-history {margin-top: 2rem; border-top: 1px solid #e5e7eb; padding-top: 1.5rem;}
     .commit-history h2 {margin-top: 0;}
     .commit-list {list-style: none; padding: 0; margin: 0.75rem 0 0;}
@@ -73,6 +75,21 @@
   </div>
 {% endif %}
 {{ content }}
+{% if page.page_gallery %}
+  {% assign gallery_items = page.page_gallery | split: "|" %}
+  <div class="plugin-gallery">
+  {% for item in gallery_items %}
+    {% if item != "" %}
+      {% assign gallery_src = item %}
+      {% if gallery_src contains '://' %}
+      {% else %}
+        {% assign gallery_src = base | append: '/' | append: gallery_src | replace: '//', '/' %}
+      {% endif %}
+      <img src="{{ gallery_src }}" alt="{{ page.page_gallery_alt | default: page.title | default: 'Plugin gallery image' }}" loading="lazy">
+    {% endif %}
+  {% endfor %}
+  </div>
+{% endif %}
 {% if page.commit_path %}
   <section class="commit-history" data-commit-path="{{ page.commit_path }}" data-commit-repo="{{ page.commit_repo }}">
     <h2>Commit history</h2>
@@ -96,7 +113,7 @@
     const moreLink = section.querySelector(".commit-more a");
     if (!path || !list || !status) return;
 
-    const apiUrl = `https://api.github.com/repos/${repo}/commits?path=${encodeURIComponent(path)}&per_page=10`;
+    const apiUrl = `https://api.github.com/repos/${repo}/commits?path=${encodeURIComponent(path)}&per_page=5`;
     const htmlUrl = `https://github.com/${repo}/commits?path=${encodeURIComponent(path)}`;
     if (moreLink) moreLink.href = htmlUrl;
 
@@ -114,7 +131,7 @@
       }
 
       status.remove();
-      commits.slice(0, 10).forEach((commit) => {
+      commits.slice(0, 5).forEach((commit) => {
         const message = commit?.commit?.message?.split("\n")[0] || "Commit";
         const author = commit?.commit?.author?.name || commit?.author?.login || "Unknown";
         const dateRaw = commit?.commit?.author?.date || null;
