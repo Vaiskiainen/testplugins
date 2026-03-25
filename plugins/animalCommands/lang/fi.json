@@ -30,7 +30,7 @@
         },
         "cat": {
             "name": "Kissa",
-            "description": ""
+            "description": "Satunnainen kissakuva"
         },
         "deer": {
             "name": "",
@@ -46,7 +46,7 @@
         },
         "fox": {
             "description": "",
-            "name": ""
+            "name": "Kettu"
         },
         "otter": {
             "description": "",
