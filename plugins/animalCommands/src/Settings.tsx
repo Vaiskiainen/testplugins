@@ -119,6 +119,7 @@ export default function Settings() {
   const scrollRef = React.useRef<any>(null);
   const [, forceUpdate] = React.useReducer((x) => x + 1, 0);
   const animals = getAvailableAnimals(storage);
+  
 
   React.useEffect(() => {
     (globalThis as any).__animalCommandsRefreshSettings = () => {
