@@ -7,10 +7,13 @@ My personal plugins for vendetta like clients.
 
 ## Current plugins
 <div align="center">
-<img src=https://img.shields.io/badge/Animal-Commands-brightgreen?style=for-the-badge></img>
+<a href="https://vaiskiainen.github.io/testplugins/animalCommands">
+<img src="https://img.shields.io/badge/Animal-Commands-brightgreen?style=for-the-badge"></img>
+</a>
+<img src="https://img.shields.io/badge/Christmas-Counter-red?style=for-the-badge"></img>
+
+<img src="https://img.shields.io/badge/Remove-Banner-blue?style=for-the-badge"></img>
 </div>
-2. Christmas counter
-3. RemoveBanner
 
 # How to install?
 Paste a plugin URL into the Plugins page of Vendetta, following a basic format of:
