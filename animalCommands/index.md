@@ -15,7 +15,7 @@ twitter_image: "https://cdn.discordapp.com/attachments/1474111055884980225/14859
 theme_color: "#9fc957"
 page_image: "images/animalCommands_1.png"
 page_image_alt: "Animal Commands"
-page_gallery: "images/animalCommands_2.png"
+page_gallery: "images/animalCommands.png"
 page_gallery_alt: "Animal Commands"
 commit_path: "plugins/animalCommands"
 commit_repo: "Vaiskiainen/testplugins"
