@@ -36,24 +36,22 @@ function normalizeKey(value) {
     return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
-async function buildImageMap() {
-    const map = new Map();
-    if (!existsSync("./images")) return map;
+async function buildImageEntries() {
+    const entries = [];
+    if (!existsSync("./images")) return entries;
 
-    const entries = await readdir("./images", { withFileTypes: true });
-    for (const entry of entries) {
+    const dirEntries = await readdir("./images", { withFileTypes: true });
+    for (const entry of dirEntries) {
         if (!entry.isFile()) continue;
         const ext = extname(entry.name).toLowerCase();
         if (!imageExtensions.has(ext)) continue;
 
         const base = entry.name.slice(0, -ext.length);
         const key = normalizeKey(base);
-        if (!map.has(key)) {
-            map.set(key, entry.name);
-        }
+        entries.push({ key, name: entry.name });
     }
 
-    return map;
+    return entries;
 }
 
 async function copyDir(src, dest) {
@@ -71,12 +69,21 @@ async function copyDir(src, dest) {
     }
 }
 
-const imageMap = await buildImageMap();
+const imageEntries = await buildImageEntries();
 
-function getLocalImageForPlugin(slug) {
+function getLocalImagesForPlugin(slug) {
     const key = normalizeKey(slug);
-    const match = imageMap.get(key);
-    return match ? `images/${match}` : null;
+    const matches = imageEntries
+        .filter((entry) => entry.key.startsWith(key))
+        .map((entry) => entry.name)
+        .sort((a, b) => a.localeCompare(b));
+    return matches.map((name) => `images/${name}`);
+}
+
+function getLocalImageByKey(rawKey) {
+    const key = normalizeKey(rawKey);
+    const match = imageEntries.find((entry) => entry.key === key);
+    return match ? `images/${match.name}` : null;
 }
 
 /** @type import("rollup").InputPluginOption */
@@ -154,13 +161,15 @@ for (let plug of await readdir("./plugins")) {
         if (existsSync(readmePath)) {
             const content = await readFile(readmePath, 'utf8');
             const { front, body } = parseReadme(content);
-            const localImage = getLocalImageForPlugin(plug);
+            const localImages = getLocalImagesForPlugin(plug);
+            const localImage = localImages[0];
             if (!front.page_image && localImage) {
                 front.page_image = localImage;
                 front.page_image_alt = manifest.name;
-            } else if (!front.page_image && front.og_image) {
-                front.page_image = front.og_image;
-                front.page_image_alt = manifest.name;
+            }
+            if (!front.page_gallery && localImages.length) {
+                front.page_gallery = localImages.join("|");
+                front.page_gallery_alt = manifest.name;
             }
             front.commit_path = `plugins/${plug}`;
             front.commit_repo = "Vaiskiainen/testplugins";
@@ -170,8 +179,9 @@ for (let plug of await readdir("./plugins")) {
                 : '---\nlayout: page\n---\n';
             await writeFile(`./dist/${plug}/index.md`, frontStr + body);
         } else {
-            const localImage = getLocalImageForPlugin(plug);
-            const imageFront = localImage ? `page_image: "${localImage}"\npage_image_alt: "${manifest.name.replace(/"/g, '\\"')}"\n` : "";
+            const localImages = getLocalImagesForPlugin(plug);
+            const localImage = localImages[0];
+            const imageFront = localImage ? `page_image: "${localImage}"\npage_image_alt: "${manifest.name.replace(/"/g, '\\"')}"\npage_gallery: "${localImages.join("|")}"\npage_gallery_alt: "${manifest.name.replace(/"/g, '\\"')}"\n` : "";
             const content = `---\nlayout: page\ntitle: "${manifest.name.replace(/"/g, '\\"')}"\n${imageFront}commit_path: "plugins/${plug}"\ncommit_repo: "Vaiskiainen/testplugins"\n---\n# ${manifest.name}\n\n${manifest.description}\n\n## Installation\n\nCopy the following link and paste it into the Plugins page of Vendetta:\n\nhttps://vaiskiainen.github.io/testplugins/${plug}\n\n## Authors\n\n${manifest.authors.map(a => `- **${a.name}**`).join('\n')}`;
             await writeFile(`./dist/${plug}/index.md`, content);
         }
@@ -197,7 +207,9 @@ const pluginsList = pluginPages
 const pluginsIndex = `---\nlayout: page\ntitle: "Plugins"\n---\n# Plugins\n\n${pluginsList}\n`;
 await writeFile('./dist/plugins/index.md', pluginsIndex);
 
-const homeIndex = `---\nlayout: page\ntitle: "Testplugins"\n---\n# Testplugins\n\nPersonal plugins for Vendetta-like clients.\n\n- Browse all plugins: [plugins](./plugins/)\n- Project wiki: [wiki](https://github.com/Vaiskiainen/testplugins/wiki)\n`;
+const promoImage = getLocalImageByKey("testplugins_promo");
+const promoFront = promoImage ? `page_image: "${promoImage}"\npage_image_alt: "Testplugins promo"\n` : "";
+const homeIndex = `---\nlayout: page\ntitle: "Testplugins"\n${promoFront}---\n# Testplugins\n\nPersonal plugins for Vendetta-like clients.\n\n- Browse all plugins: [plugins](./plugins/)\n- Project wiki: [wiki](https://github.com/Vaiskiainen/testplugins/wiki)\n`;
 await writeFile('./dist/index.md', homeIndex);
 
 await mkdir('./dist/_layouts', { recursive: true });
