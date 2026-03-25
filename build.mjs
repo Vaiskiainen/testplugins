@@ -163,12 +163,13 @@ for (let plug of await readdir("./plugins")) {
             const { front, body } = parseReadme(content);
             const localImages = getLocalImagesForPlugin(plug);
             const localImage = localImages[0];
+            const galleryImages = localImages.slice(1);
             if (!front.page_image && localImage) {
                 front.page_image = localImage;
                 front.page_image_alt = manifest.name;
             }
-            if (!front.page_gallery && localImages.length) {
-                front.page_gallery = localImages.join("|");
+            if (!front.page_gallery && galleryImages.length) {
+                front.page_gallery = galleryImages.join("|");
                 front.page_gallery_alt = manifest.name;
             }
             front.commit_path = `plugins/${plug}`;
@@ -181,7 +182,10 @@ for (let plug of await readdir("./plugins")) {
         } else {
             const localImages = getLocalImagesForPlugin(plug);
             const localImage = localImages[0];
-            const imageFront = localImage ? `page_image: "${localImage}"\npage_image_alt: "${manifest.name.replace(/"/g, '\\"')}"\npage_gallery: "${localImages.join("|")}"\npage_gallery_alt: "${manifest.name.replace(/"/g, '\\"')}"\n` : "";
+            const galleryImages = localImages.slice(1);
+            const imageFront = localImage
+                ? `page_image: "${localImage}"\npage_image_alt: "${manifest.name.replace(/"/g, '\\"')}"\n${galleryImages.length ? `page_gallery: "${galleryImages.join("|")}"\npage_gallery_alt: "${manifest.name.replace(/"/g, '\\"')}"\n` : ""}`
+                : "";
             const content = `---\nlayout: page\ntitle: "${manifest.name.replace(/"/g, '\\"')}"\n${imageFront}commit_path: "plugins/${plug}"\ncommit_repo: "Vaiskiainen/testplugins"\n---\n# ${manifest.name}\n\n${manifest.description}\n\n## Installation\n\nCopy the following link and paste it into the Plugins page of Vendetta:\n\nhttps://vaiskiainen.github.io/testplugins/${plug}\n\n## Authors\n\n${manifest.authors.map(a => `- **${a.name}**`).join('\n')}`;
             await writeFile(`./dist/${plug}/index.md`, content);
         }
