@@ -26,7 +26,7 @@ type FormsModule = Partial<{
   FormText: React.ComponentType<any>;
 }>;
 
-const { ScrollView, View, Text, Image } = RN;
+const { ScrollView, View, Text, Image, TextInput } = RN;
 const Forms = (
   UiForms ||
   findByProps(
@@ -100,7 +100,6 @@ const renderIcon = (iconId?: number, tintColor?: string) => {
 };
 
 const notificationsIconId = getAssetId("ic_notif");
-const infoIconId = getAssetId("ic_premium_info_24px");
 const logIconId = getAssetId("empty_server_settings_audit_log_dark");
 const friendsIconId = getAssetId("ic_friend_wave_24px");
 const serversIconId = getFirstAssetId(
@@ -114,11 +113,17 @@ const backIconId = getAssetId("back-icon");
 const personRemoveIconId = getAssetId("ic_close_circle_24px");
 const leaveGuildIconId = getAssetId("ic_close_circle_24px");
 const trashIconId = getAssetId("ic_trash_24px");
+const searchIconId = getFirstAssetId(["ic_search_24px", "ic_search"], logIconId);
+const exportIconId = getFirstAssetId(
+  ["ic_copy_24px", "ic_copy", "ic_upload_24px", "ic_upload"],
+  logIconId,
+);
 
 export default () => {
   useProxy(storage);
 
   const [selectedPageId, setSelectedPageId] = React.useState<string | null>(null);
+  const [logSearch, setLogSearch] = React.useState("");
   const scrollRef = React.useRef<React.ElementRef<typeof ScrollView> | null>(null);
 
   if (!FormRow || !FormSwitchRow) {
@@ -128,6 +133,17 @@ export default () => {
   const logs = React.useMemo(() => sanitizeLogs(storage.logs), [storage.logs]);
   const reversedLogs = React.useMemo(() => logs.slice().reverse(), [logs]);
   const hasLogs = reversedLogs.length > 0;
+  const normalizedSearch = logSearch.trim().toLowerCase();
+  const filteredLogs = React.useMemo(() => {
+    if (!normalizedSearch) return reversedLogs;
+    return reversedLogs.filter((log) => {
+      const content = log.content?.toLowerCase?.() ?? "";
+      if (content.includes(normalizedSearch)) return true;
+      const timestamp = new Date(log.timestamp).toLocaleString().toLowerCase();
+      return timestamp.includes(normalizedSearch);
+    });
+  }, [normalizedSearch, reversedLogs]);
+  const hasFilteredLogs = filteredLogs.length > 0;
   const notificationStyle: NotificationStyle = isNotificationStyle(storage.notificationStyle)
     ? storage.notificationStyle
     : "banner";
@@ -152,6 +168,45 @@ export default () => {
         style={{ width: 20, height: 20, tintColor: semanticColors.TEXT_MUTED }}
       />
     );
+  };
+
+  const exportLogs = async () => {
+    if (!logs.length) {
+      showToast("No logs to export.", logIconId);
+      return;
+    }
+    const payload = JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        count: logs.length,
+        logs,
+      },
+      null,
+      2,
+    );
+
+    try {
+      const share = (RN as any).Share?.share;
+      if (typeof share === "function") {
+        await share({ message: payload });
+        return;
+      }
+    } catch {
+
+    }
+
+    try {
+      const clipboard = (RN as any).Clipboard ?? (RN as any).clipboard;
+      if (clipboard?.setString) {
+        clipboard.setString(payload);
+        showToast("Log JSON copied to clipboard.", logIconId);
+        return;
+      }
+    } catch {
+
+    }
+
+    showToast("Unable to export logs.", logIconId);
   };
 
   React.useEffect(() => {
@@ -210,36 +265,34 @@ export default () => {
       </BetterTableRowGroup>
 
       <BetterTableRowGroup title="Friends" icon={friendsIconId}>
-        <View style={{ opacity: 0.5 }}>
-          <FormSwitchRow
-            label="Friend Removals"
-            subLabel="Notify when someone unfriends you."
-            leading={renderIcon(personRemoveIconId)}
-            value={false}
-            onValueChange={() => showToast("Coming soon", infoIconId)}
-          />
-        </View>
-        <View style={{ opacity: 0.5 }}>
-          <FormSwitchRow
-            label="Friend Request Cancellations"
-            subLabel="Notify when a friend request is canceled."
-            leading={renderIcon(personRemoveIconId)}
-            value={false}
-            onValueChange={() => showToast("Coming soon", infoIconId)}
-          />
-        </View>
+        <FormSwitchRow
+          label="Friend Removals"
+          subLabel="Notify when someone unfriends you."
+          leading={renderIcon(personRemoveIconId)}
+          value={storage.notifyFriends ?? true}
+          onValueChange={(v: boolean) => (storage.notifyFriends = v)}
+        />
+        <RN.Pressable onPress={() => showToast("Coming soon.", notificationsIconId)}>
+          <View style={{ opacity: 0.5 }} pointerEvents="none">
+            <FormSwitchRow
+              label="Friend Request Cancellations"
+              subLabel="Coming soon."
+              leading={renderIcon(personRemoveIconId)}
+              value={false}
+              onValueChange={() => {}}
+            />
+          </View>
+        </RN.Pressable>
       </BetterTableRowGroup>
 
       <BetterTableRowGroup title="Group Chats" icon={groupsIconId}>
-        <View style={{ opacity: 0.5 }}>
-          <FormSwitchRow
-            label="Group Chat Removals"
-            subLabel="Notify when you are removed from a group DM."
-            leading={renderIcon(leaveGuildIconId)}
-            value={false}
-            onValueChange={() => showToast("Coming soon", infoIconId)}
-          />
-        </View>
+        <FormSwitchRow
+          label="Group Chat Removals"
+          subLabel="Notify when you are removed from a group DM."
+          leading={renderIcon(leaveGuildIconId)}
+          value={storage.notifyGroupChats ?? true}
+          onValueChange={(v: boolean) => (storage.notifyGroupChats = v)}
+        />
       </BetterTableRowGroup>
 
       <BetterTableRowGroup title="Navigation" icon={actionsIconId}>
@@ -254,21 +307,46 @@ export default () => {
 
   const renderLogsPage = () => (
     <>
+      <BetterTableRowGroup title="Search" icon={searchIconId}>
+        <View style={{ padding: 16 }}>
+          <TextInput
+            value={logSearch}
+            onChangeText={setLogSearch}
+            placeholder="Search logs"
+            placeholderTextColor={semanticColors.TEXT_MUTED}
+            autoCorrect={false}
+            autoCapitalize="none"
+            style={{
+              backgroundColor: semanticColors.BACKGROUND_SECONDARY ?? "#2b2d31",
+              color: semanticColors.TEXT_DEFAULT ?? "#ffffff",
+              borderRadius: 8,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              fontSize: 14,
+            }}
+          />
+        </View>
+      </BetterTableRowGroup>
+
       <BetterTableRowGroup title="Notification Log" icon={logIconId}>
         {!hasLogs ? (
           <View style={{ padding: 16, alignItems: "center" }}>
             <Text style={{ color: semanticColors.TEXT_MUTED }}>No recent events.</Text>
           </View>
+        ) : !hasFilteredLogs ? (
+          <View style={{ padding: 16, alignItems: "center" }}>
+            <Text style={{ color: semanticColors.TEXT_MUTED }}>No matches.</Text>
+          </View>
         ) : (
           <>
-            {reversedLogs.map((log: LogEntry, i: number) => (
+            {filteredLogs.map((log: LogEntry, i: number) => (
               <View key={`${log?.timestamp ?? "log"}-${i}`}>
                 <FormRow
                   label={log.content}
                   subLabel={new Date(log.timestamp).toLocaleString()}
                   leading={renderIcon(getAssetId(log.icon))}
                 />
-                {i < reversedLogs.length - 1 && (Divider ? <Divider /> : null)}
+                {i < filteredLogs.length - 1 && (Divider ? <Divider /> : null)}
               </View>
             ))}
             {Divider ? <Divider /> : null}
@@ -278,6 +356,12 @@ export default () => {
 
       {hasLogs && (
         <BetterTableRowGroup title="Log Actions" icon={actionsIconId}>
+          <FormRow
+            label="Export Logs (JSON)"
+            subLabel="Share or copy log diagnostics"
+            leading={renderIcon(exportIconId)}
+            onPress={() => void exportLogs()}
+          />
           <FormRow
             label="Clear Logs"
             labelStyle={{ color: "#ed4245" }}

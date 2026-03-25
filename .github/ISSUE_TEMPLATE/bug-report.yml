@@ -10,7 +10,14 @@ body:
     attributes:
       value: |
         Thanks for reporting a bug! Please fill out the details below I can fix it.
-
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin name
+      description: Which plugin are you reporting for?
+      placeholder: "Animal Commands"
+    validations:
+      required: true
   - type: input
     id: summary
     attributes:
