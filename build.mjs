@@ -36,6 +36,14 @@ function normalizeKey(value) {
     return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+function isBlank(value) {
+    return value == null || String(value).trim() === "";
+}
+
+function isExternalUrl(value) {
+    return typeof value === "string" && value.includes("://");
+}
+
 async function buildImageEntries() {
     const entries = [];
     if (!existsSync("./images")) return entries;
@@ -171,6 +179,14 @@ for (let plug of await readdir("./plugins")) {
             if (!front.page_gallery && galleryImages.length) {
                 front.page_gallery = galleryImages.join("|");
                 front.page_gallery_alt = manifest.name;
+            }
+            if (localImage) {
+                if (isBlank(front.og_image) || isExternalUrl(front.og_image)) {
+                    front.og_image = localImage;
+                }
+                if (isBlank(front.twitter_image) || isExternalUrl(front.twitter_image)) {
+                    front.twitter_image = localImage;
+                }
             }
             front.commit_path = `plugins/${plug}`;
             front.commit_repo = "Vaiskiainen/testplugins";

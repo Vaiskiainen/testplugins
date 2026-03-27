@@ -53,6 +53,8 @@ type LogEntry = {
     content: string;
     icon: string;
     timestamp: number;
+    mediaSource?: any;
+    mediaShape?: "circle" | "rounded";
 };
 
 type SnapshotEntry = {
@@ -668,13 +670,20 @@ function updateSnapshotSoon(delay = 250) {
     }, delay);
 }
 
-function addLog(content: string, icon: string) {
+function addLog(
+    content: string,
+    icon: string,
+    mediaSource?: any,
+    mediaShape?: "circle" | "rounded",
+) {
     if (!isNonEmptyString(content)) return;
     const logs = Array.isArray(storageState.logs) ? storageState.logs.filter(isLogEntry) : [];
     logs.push({
         content,
         icon,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        mediaSource,
+        mediaShape,
     });
 
     if (logs.length > MAX_LOGS) {

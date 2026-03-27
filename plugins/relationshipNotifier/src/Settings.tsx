@@ -9,11 +9,14 @@ import { showToast } from "@vendetta/ui/toasts";
 import BetterTableRowGroup from "./components/BetterTableRowGroup";
 
 type NotificationStyle = "banner" | "toast";
+type LogFilter = "all" | "servers" | "friends" | "groups";
 
 type LogEntry = {
   content: string;
   icon: string;
   timestamp: number;
+  mediaSource?: any;
+  mediaShape?: "circle" | "rounded";
 };
 
 type FormRowComponent = React.ComponentType<any> & { Icon?: React.ComponentType<any> };
@@ -26,7 +29,7 @@ type FormsModule = Partial<{
   FormText: React.ComponentType<any>;
 }>;
 
-const { ScrollView, View, Text, Image, TextInput } = RN;
+const { ScrollView, View, Text, Image, TextInput, Pressable } = RN;
 const Forms = (
   UiForms ||
   findByProps(
@@ -124,6 +127,7 @@ export default () => {
 
   const [selectedPageId, setSelectedPageId] = React.useState<string | null>(null);
   const [logSearch, setLogSearch] = React.useState("");
+  const [filterType, setFilterType] = React.useState<LogFilter>("all");
   const scrollRef = React.useRef<React.ElementRef<typeof ScrollView> | null>(null);
 
   if (!FormRow || !FormSwitchRow) {
@@ -134,15 +138,28 @@ export default () => {
   const reversedLogs = React.useMemo(() => logs.slice().reverse(), [logs]);
   const hasLogs = reversedLogs.length > 0;
   const normalizedSearch = logSearch.trim().toLowerCase();
+
   const filteredLogs = React.useMemo(() => {
-    if (!normalizedSearch) return reversedLogs;
-    return reversedLogs.filter((log) => {
+    let result = reversedLogs;
+
+    if (filterType !== "all") {
+      result = result.filter((log) => {
+        if (filterType === "servers") return log.content.toLowerCase().includes("server") || log.content.toLowerCase().includes("kicked") || log.content.toLowerCase().includes("banned");
+        if (filterType === "friends") return log.content.toLowerCase().includes("friend") || log.content.toLowerCase().includes("unfriended");
+        if (filterType === "groups") return log.content.toLowerCase().includes("group dm") || log.content.toLowerCase().includes("group chat");
+        return true;
+      });
+    }
+
+    if (!normalizedSearch) return result;
+    return result.filter((log) => {
       const content = log.content?.toLowerCase?.() ?? "";
       if (content.includes(normalizedSearch)) return true;
       const timestamp = new Date(log.timestamp).toLocaleString().toLowerCase();
       return timestamp.includes(normalizedSearch);
     });
-  }, [normalizedSearch, reversedLogs]);
+  }, [normalizedSearch, reversedLogs, filterType]);
+
   const hasFilteredLogs = filteredLogs.length > 0;
   const notificationStyle: NotificationStyle = isNotificationStyle(storage.notificationStyle)
     ? storage.notificationStyle
@@ -305,9 +322,26 @@ export default () => {
     </>
   );
 
+  const FilterChip = ({ label, value, active, onSelect }: { label: string, value: LogFilter, active: boolean, onSelect: (v: LogFilter) => void }) => (
+    <Pressable
+      onPress={() => onSelect(value)}
+      style={{
+        backgroundColor: active ? (semanticColors.BRAND_500 ?? "#5865f2") : (semanticColors.BACKGROUND_TERTIARY ?? "#1f2124"),
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        marginRight: 8,
+      }}
+    >
+      <Text style={{ color: active ? "#ffffff" : (semanticColors.TEXT_MUTED ?? "#b5bac1"), fontSize: 12, fontWeight: "600" }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+
   const renderLogsPage = () => (
     <>
-      <BetterTableRowGroup title="Search" icon={searchIconId}>
+      <BetterTableRowGroup title="Search & Filter" icon={searchIconId}>
         <View style={{ padding: 16 }}>
           <TextInput
             value={logSearch}
@@ -323,8 +357,15 @@ export default () => {
               paddingHorizontal: 12,
               paddingVertical: 10,
               fontSize: 14,
+              marginBottom: 12,
             }}
           />
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            <FilterChip label="All" value="all" active={filterType === "all"} onSelect={setFilterType} />
+            <FilterChip label="Servers" value="servers" active={filterType === "servers"} onSelect={setFilterType} />
+            <FilterChip label="Friends" value="friends" active={filterType === "friends"} onSelect={setFilterType} />
+            <FilterChip label="Groups" value="groups" active={filterType === "groups"} onSelect={setFilterType} />
+          </View>
         </View>
       </BetterTableRowGroup>
 
@@ -339,16 +380,36 @@ export default () => {
           </View>
         ) : (
           <>
-            {filteredLogs.map((log: LogEntry, i: number) => (
-              <View key={`${log?.timestamp ?? "log"}-${i}`}>
-                <FormRow
-                  label={log.content}
-                  subLabel={new Date(log.timestamp).toLocaleString()}
-                  leading={renderIcon(getAssetId(log.icon))}
+            {filteredLogs.map((log: LogEntry, i: number) => {
+              const iconAssetId = getAssetId(log.icon);
+              const mediaSource = log.mediaSource;
+              const mediaShape = log.mediaShape ?? "rounded";
+              
+              const leading = mediaSource ? (
+                <Image
+                  source={mediaSource}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: mediaShape === "circle" ? 16 : 8,
+                  }}
                 />
-                {i < filteredLogs.length - 1 && (Divider ? <Divider /> : null)}
-              </View>
-            ))}
+              ) : renderIcon(iconAssetId);
+
+              return (
+                <View key={`${log?.timestamp ?? "log"}-${i}`}>
+                  <FormRow
+                    label={log.content}
+                    subLabel={new Date(log.timestamp).toLocaleString()}
+                    leading={leading}
+                    onPress={() => {
+                      showToast(log.content, iconAssetId);
+                    }}
+                  />
+                  {i < filteredLogs.length - 1 && (Divider ? <Divider /> : null)}
+                </View>
+              );
+            })}
             {Divider ? <Divider /> : null}
           </>
         )}
