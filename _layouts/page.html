@@ -3,17 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% assign base = site.baseurl %}
+{% if base == nil or base == "" %}
+  {% if site.github.repository_name %}
+    {% assign base = "/" | append: site.github.repository_name %}
+  {% else %}
+    {% assign base = "" %}
+  {% endif %}
+{% endif %}
 <title>{{ page.title | default: site.title }}</title>
 {% if page.og_title %}<meta property="og:title" content="{{ page.og_title }}">{% endif %}
 {% if page.og_description %}<meta property="og:description" content="{{ page.og_description }}">{% endif %}
-{% if page.og_image %}<meta property="og:image" content="{{ page.og_image }}">{% endif %}
+{% assign og_raw = page.og_image | default: page.page_image %}
+{% assign og_src = og_raw %}
+{% if og_src %}
+  {% if og_src contains '://' %}
+  {% else %}
+    {% assign og_src = base | append: '/' | append: og_src | replace: '//', '/' %}
+  {% endif %}
+  <meta property="og:image" content="{{ og_src }}">
+{% endif %}
 {% if page.og_url %}<meta property="og:url" content="{{ page.og_url }}">{% endif %}
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Testplugins">
 {% if page.twitter_card %}<meta name="twitter:card" content="{{ page.twitter_card }}">{% endif %}
 {% if page.twitter_title %}<meta name="twitter:title" content="{{ page.twitter_title }}">{% endif %}
 {% if page.twitter_description %}<meta name="twitter:description" content="{{ page.twitter_description }}">{% endif %}
-{% if page.twitter_image %}<meta name="twitter:image" content="{{ page.twitter_image }}">{% endif %}
+{% assign twitter_raw = page.twitter_image | default: og_raw %}
+{% assign twitter_src = twitter_raw %}
+{% if twitter_src %}
+  {% if twitter_src contains '://' %}
+  {% else %}
+    {% assign twitter_src = base | append: '/' | append: twitter_src | replace: '//', '/' %}
+  {% endif %}
+  <meta name="twitter:image" content="{{ twitter_src }}">
+{% endif %}
 {% if page.theme_color %}<meta name="theme-color" content="{{ page.theme_color }}">{% endif %}
 {% if page.author %}<meta name="author" content="{{ page.author }}">{% endif %}
 <style>
@@ -52,14 +76,6 @@
 </style>
 </head>
 <body>
-{% assign base = site.baseurl %}
-{% if base == nil or base == "" %}
-  {% if site.github.repository_name %}
-    {% assign base = "/" | append: site.github.repository_name %}
-  {% else %}
-    {% assign base = "" %}
-  {% endif %}
-{% endif %}
 <header class="site-header">
   <div class="nav-inner">
     <nav class="nav-links" aria-label="Primary">
