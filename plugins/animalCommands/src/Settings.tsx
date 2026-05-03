@@ -278,11 +278,11 @@ export default function Settings() {
           icon={pickIcon("ic_pets_24px", "ic_account_circle_24px")}
           padding
         >
-          {animal.description ? <ThemedText>{animal.description}</ThemedText> : null}
+          {animal.description ? <ThemedText>{i18n.t(animal.description)}</ThemedText> : null}
         </BetterTableRowGroup>
 
         <BetterTableRowGroup
-          title="Choose API"
+          title={i18n.t("settings.groups.choose_api")}
           icon={pickIcon("SettingsIcon", "ic_settings_24px")}
         >
           {animal.apis.map((api) => {
