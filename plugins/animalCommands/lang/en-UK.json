@@ -1,56 +1,56 @@
 {
     "commands": {
         "capybara": {
-            "name": "",
-            "description": ""
+            "name": "capybara",
+            "description": "Random capybara photo"
         },
         "turtle": {
-            "name": "",
-            "description": ""
+            "name": "turtle",
+            "description": "Random turtle photo"
         },
         "horse": {
-            "description": "",
-            "name": ""
+            "description": "Random horse photo",
+            "name": "horse"
         },
         "sheep": {
-            "description": "",
-            "name": ""
+            "description": "Random sheep photo",
+            "name": "sheep"
         },
         "duck": {
-            "name": "",
-            "description": ""
+            "name": "duck",
+            "description": "Random duck photo"
         },
         "shiba": {
-            "name": "",
-            "description": ""
+            "name": "shiba",
+            "description": "Random shiba photo"
         },
         "dog": {
-            "description": "",
-            "name": ""
+            "description": "Random dog photo",
+            "name": "dog"
         },
         "cat": {
-            "name": "",
-            "description": ""
+            "name": "cat",
+            "description": "Random cat photo"
         },
         "deer": {
-            "name": "",
-            "description": ""
+            "name": "deer",
+            "description": "Random deer photo"
         },
         "bird": {
-            "name": "",
-            "description": ""
+            "name": "bird",
+            "description": "Random bird photo"
         },
         "dinosaur": {
-            "name": "",
-            "description": ""
+            "name": "dinosaur",
+            "description": "Secret dino — unlocked via hidden settings"
         },
         "fox": {
-            "description": "",
-            "name": ""
+            "description": "Random fox photo",
+            "name": "fox"
         },
         "otter": {
-            "description": "",
-            "name": ""
+            "description": "Random otter photo",
+            "name": "otter"
         }
     },
     "apis": {
@@ -113,38 +113,46 @@
     },
     "settings": {
         "groups": {
-            "animals": "",
-            "navigation": "",
-            "note": "",
-            "choose_api": ""
+            "animals": "Animals",
+            "navigation": "Navigation",
+            "note": "Note",
+            "choose_api": "Choose API",
+            "localization": "Localisation"
         },
         "items": {
-            "api_label": "",
-            "selected_api": "",
-            "note_text": "",
-            "back_to_animals": ""
+            "api_label": "API: {{apiName}}",
+            "selected_api": "Selected · {{apiDescription}}",
+            "note_text": "Found a bug or want an animal added? DM \"@vaiskiainen.\"",
+            "back_to_animals": "Back to animals",
+            "localization_title": "Help us translate!",
+            "localization_description": "This plugin supports multiple languages. Help us improve translations and add new ones!"
         },
         "errors": {
-            "failed_ui": "",
-            "update_vendetta": ""
+            "failed_ui": "Failed to load native settings UI",
+            "update_vendetta": "Update your Revenge/Vendetta build and try again."
         },
         "header": {
-            "title": "",
-            "subtitle": ""
+            "title": "Commands",
+            "subtitle": "Cool animal images with slash commands"
         }
     },
     "toasts": {
-        "hidden_settings_status": "",
-        "no_image": "",
-        "api_misconfigured": "",
-        "hidden_settings_unlocked": "",
-        "command_disabled": "",
-        "fetch_failed": ""
+        "hidden_settings_status": "Hidden settings {{status}}",
+        "no_image": "API returned no image. Try another source.",
+        "api_misconfigured": "This API is not configured correctly.",
+        "hidden_settings_unlocked": "Hidden settings unlocked!",
+        "command_disabled": "That command is disabled in settings.",
+        "fetch_failed": "Failed to fetch animal image."
     },
     "ui": {
         "status": {
-            "visible": "",
-            "hidden": ""
+            "visible": "visible",
+            "hidden": "hidden"
         }
+    },
+    "api_notes": {
+        "filters_non_images": "(filters non-images)",
+        "includes_fact": "(includes fact)",
+        "ott": "(ott)"
     }
 }

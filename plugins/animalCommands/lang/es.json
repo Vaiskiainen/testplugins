@@ -1,56 +1,56 @@
 {
     "commands": {
         "capybara": {
-            "name": "",
-            "description": ""
+            "name": "capibara",
+            "description": "Foto aleatoria de un capibara"
         },
         "turtle": {
-            "name": "",
-            "description": ""
+            "name": "tortuga",
+            "description": "Foto aleatoria de una tortuga"
         },
         "horse": {
-            "description": "",
-            "name": ""
+            "description": "Foto aleatoria de un caballo",
+            "name": "caballo"
         },
         "sheep": {
-            "description": "",
-            "name": ""
+            "description": "Foto aleatoria de una oveja",
+            "name": "oveja"
         },
         "duck": {
-            "name": "",
-            "description": ""
+            "name": "pato",
+            "description": "Foto aleatoria de un pato"
         },
         "shiba": {
-            "name": "",
-            "description": ""
+            "name": "shiba",
+            "description": "Foto aleatoria de un shiba"
         },
         "dog": {
-            "description": "",
-            "name": ""
+            "description": "Foto aleatoria de un perro",
+            "name": "perro"
         },
         "cat": {
-            "name": "",
-            "description": ""
+            "name": "gato",
+            "description": "Foto aleatoria de un gato"
         },
         "deer": {
-            "name": "",
-            "description": ""
+            "name": "ciervo",
+            "description": "Foto aleatoria de un ciervo"
         },
         "bird": {
-            "name": "",
-            "description": ""
+            "name": "pájaro",
+            "description": "Foto aleatoria de un pájaro"
         },
         "dinosaur": {
-            "name": "",
-            "description": ""
+            "name": "dinosaurio",
+            "description": "Dino secreto: se desbloquea a través de los ajustes ocultos"
         },
         "fox": {
-            "description": "",
-            "name": ""
+            "description": "Foto aleatoria de un zorro",
+            "name": "zorro"
         },
         "otter": {
-            "description": "",
-            "name": ""
+            "description": "Foto aleatoria de una nutria",
+            "name": "nutria"
         }
     },
     "apis": {
@@ -113,38 +113,46 @@
     },
     "settings": {
         "groups": {
-            "animals": "",
-            "navigation": "",
-            "note": "",
-            "choose_api": ""
+            "animals": "Animales",
+            "navigation": "Navegación",
+            "note": "Nota",
+            "choose_api": "Selecciona una API",
+            "localization": "Ubicación"
         },
         "items": {
-            "api_label": "",
-            "selected_api": "",
-            "note_text": "",
-            "back_to_animals": ""
+            "api_label": "API: {{apiName}}",
+            "selected_api": "Seleccionado · {{apiDescription}}",
+            "note_text": "¿Has encontrado un error o quieres que se añada un animal? Envía un mensaje privado a «@vaiskiainen»",
+            "back_to_animals": "Volver a los animales",
+            "localization_title": "¡Ayúdanos a traducir!",
+            "localization_description": "Este complemento está disponible en varios idiomas. ¡Ayúdanos a mejorar las traducciones y a añadir otras nuevas!"
         },
         "errors": {
-            "failed_ui": "",
-            "update_vendetta": ""
+            "failed_ui": "No se ha podido cargar la interfaz de usuario inicial",
+            "update_vendetta": "Actualiza tu configuración de Revenge/Vendetta e inténtalo de nuevo."
         },
         "header": {
-            "title": "",
-            "subtitle": ""
+            "title": "Comandos",
+            "subtitle": "Imágenes geniales de animales con comandos"
         }
     },
     "toasts": {
-        "hidden_settings_status": "",
-        "no_image": "",
-        "api_misconfigured": "",
-        "hidden_settings_unlocked": "",
-        "command_disabled": "",
-        "fetch_failed": ""
+        "hidden_settings_status": "Configuración oculta {{status}}",
+        "no_image": "La API no devolvió ninguna imagen. Pruebe con otra fuente.",
+        "api_misconfigured": "Esta API no está configurada correctamente.",
+        "hidden_settings_unlocked": "¡Ajustes ocultos desbloqueados!",
+        "command_disabled": "Ese comando está deshabilitado en la configuración.",
+        "fetch_failed": "No se pudo obtener la imagen del animal."
     },
     "ui": {
         "status": {
-            "visible": "",
-            "hidden": ""
+            "visible": "visible",
+            "hidden": "oculta"
         }
+    },
+    "api_notes": {
+        "filters_non_images": "(filtra los elementos que no son imágenes)",
+        "includes_fact": "(incluye una razón)",
+        "ott": "(servicio de transmisión de contenido)"
     }
 }
