@@ -58,7 +58,7 @@ https://vaiskiainen.github.io/testplugins/removeBanner/
 ### Experimental plugins:
 
 > [!WARNING]  
-> These plugins are experimantal and unstable
+> These plugins are experimental and unstable
 
 
 
